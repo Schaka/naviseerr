@@ -1,0 +1,8 @@
+server:
+  port: 8978
+
+logging:
+  level:
+    com.github.schaka: INFO # Set to debug or trace to get more info about what Naviseerr is doing
+  threshold:
+    file: NONE # Set to TRACE to enable file logging

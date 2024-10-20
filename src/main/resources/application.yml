@@ -1,0 +1,32 @@
+spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: expireAfterAccess=30m
+
+  threads:
+    virtual:
+      enabled: true
+
+logging:
+  file:
+    path: "/logs"
+    name: "/logs/naviseerr.log"
+  logback:
+    rollingpolicy:
+      max-history: 14
+      max-file-size: 100MB
+      clean-history-on-start: true
+  threshold:
+    file: NONE
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      base-path: "/"
+  endpoint:
+    health:
+      probes:
+        enabled: true
