@@ -1,4 +1,4 @@
-# Naviseerr - Cleans up your media library
+# Naviseerr - self-hosted music manager
 
 <p align="center">
     <img src="logos/naviseerr_icon.png" width=384>
