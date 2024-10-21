@@ -1,4 +1,4 @@
-package com.github.schaka.naviseerr.servarr
+package com.github.schaka.naviseerr.music_library
 
 interface RestClientProperties {
     val enabled: Boolean

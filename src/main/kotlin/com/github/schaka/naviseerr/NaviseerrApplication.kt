@@ -1,9 +1,8 @@
 package com.github.schaka.naviseerr
 
-import com.github.schaka.naviseerr.servarr.RestClientProperties
-import com.github.schaka.naviseerr.servarr.ServarrService
-import com.github.schaka.naviseerr.servarr.radarr.RadarrClient
-import com.github.schaka.naviseerr.servarr.sonarr.SonarrClient
+import com.github.schaka.janitorr.mediaserver.NavidromeClient
+import com.github.schaka.naviseerr.music_library.RestClientProperties
+import com.github.schaka.naviseerr.music_library.lidarr.LidarrClient
 import org.springframework.aot.hint.RuntimeHints
 import org.springframework.aot.hint.RuntimeHintsRegistrar
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -27,16 +26,14 @@ class NaviseerrApplication {
 
     class Hints : RuntimeHintsRegistrar {
         override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
-            hints.proxies().registerJdkProxy(RadarrClient::class.java)
-            hints.proxies().registerJdkProxy(SonarrClient::class.java)
-            hints.proxies().registerJdkProxy(ServarrService::class.java)
+            hints.proxies().registerJdkProxy(LidarrClient::class.java)
             hints.proxies().registerJdkProxy(RestClientProperties::class.java)
+            hints.proxies().registerJdkProxy(NavidromeClient::class.java)
         }
     }
 }
 
 fun main(args: Array<String>) {
-    Path.of("/home/schaka/nausicaä")
     runApplication<NaviseerrApplication>(*args)
 }
 

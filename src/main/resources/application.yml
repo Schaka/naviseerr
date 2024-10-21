@@ -8,6 +8,11 @@ spring:
     virtual:
       enabled: true
 
+  datasource:
+    url: "jdbc:h2:file:./database/naviseerr"
+    username: naviseerr
+    password: naviseerr-pw
+
 logging:
   file:
     path: "/logs"

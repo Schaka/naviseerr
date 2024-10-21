@@ -1,5 +1,13 @@
 import net.nemerosa.versioning.VersioningExtension
+import org.jooq.meta.jaxb.Logging
+import nu.studer.gradle.jooq.JooqEdition
+import java.nio.file.Files
+import nu.studer.gradle.jooq.JooqExtension
+import nu.studer.gradle.jooq.JooqGenerate
+import org.flywaydb.gradle.FlywayExtension
+import org.flywaydb.gradle.task.FlywayMigrateTask
 import org.gradle.kotlin.dsl.invoke
+import org.gradle.kotlin.dsl.jooqGenerator
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_22
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -11,10 +19,12 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 plugins {
 
     id("idea")
-    id("org.springframework.boot") version "3.4.0-SNAPSHOT"
+    id("org.springframework.boot") version "3.4.0-M3"
     id("io.spring.dependency-management") version "1.1.6"
     id("net.nemerosa.versioning") version "3.1.0"
     id("org.graalvm.buildtools.native") version "0.10.3"
+    id("nu.studer.jooq") version "9.0"
+    id("org.flywaydb.flyway") version "10.20.0"
 
     kotlin("jvm") version "2.0.21"
     kotlin("plugin.spring") version "2.0.21"
@@ -31,6 +41,7 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-cache")
+    implementation("org.springframework.boot:spring-boot-starter-jooq")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -42,6 +53,9 @@ dependencies {
     implementation("io.github.openfeign:feign-httpclient:13.1")
 
     implementation("org.slf4j:jcl-over-slf4j")
+    implementation("com.h2database:h2")
+    implementation("org.flywaydb:flyway-core")
+    jooqGenerator("com.h2database:h2")
 
     testImplementation(kotlin("test"))
     testImplementation("io.mockk:mockk:1.13.12")
@@ -50,6 +64,73 @@ dependencies {
     }
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+}
+
+configure<FlywayExtension> {
+    // this migration references a temporary database at compile time that's only used for generating JOOQ classes
+    // Spring creates a migration at runtime, before the application starts and bootstraps any connections via JOOQ
+    val tempDir = Files.createTempDirectory("naviseerr-build-db")
+    url = "jdbc:h2:file:${tempDir}/naviseerr"
+    schemas = arrayOf("PUBLIC")
+    user = "naviseerr"
+    password = "naviseerr-pw"
+}
+
+tasks.withType<FlywayMigrateTask> {
+ // nothing for now
+}
+
+configure<JooqExtension> {
+    version.set("3.19.11")  // the default (can be omitted)
+    edition.set(JooqEdition.OSS)  // the default (can be omitted)
+
+    configurations {
+        create("main") {  // name of the jOOQ configuration
+            generateSchemaSourceOnCompilation.set(true)  // default (can be omitted)
+
+            jooqConfiguration.apply {
+                logging = Logging.WARN
+                jdbc.apply {
+                    driver = "org.h2.Driver"
+                    url = flyway.url
+                    user = flyway.user
+                    password = flyway.password
+                }
+                generator.apply {
+                    name = "org.jooq.codegen.DefaultGenerator"
+                    database.apply {
+                        inputSchema = "PUBLIC"
+                        outputSchema = "PUBLIC"
+                        name = "org.jooq.meta.h2.H2Database"
+                        includes = ".*"
+                        excludes = "flyway_schema_history"
+                    }
+                    generate.apply {
+                        isDeprecated = false
+                        isRecords = true
+                        isImmutablePojos = true
+                        isFluentSetters = true
+                    }
+                    target.apply {
+                        packageName = "com.github.schaka.naviseerr.db"
+                        directory = "build/generated-src/jooq/main"  // default (can be omitted)
+                    }
+                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                }
+            }
+        }
+    }
+}
+
+tasks.withType<JooqGenerate> {
+    dependsOn("flywayMigrate")
+
+    // declare Flyway migration scripts as inputs on the jOOQ task
+    inputs.files(fileTree("src/main/resources/db/migration"))
+        .withPropertyName("migrations")
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    //allInputsDeclared.set(true)
 }
 
 configure<SpringBootExtension> {
@@ -86,12 +167,6 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-tasks.withType<JavaCompile> {
-    sourceCompatibility = JavaVersion.VERSION_22.toString()
-    targetCompatibility = JavaVersion.VERSION_22.toString()
-
-    finalizedBy("copyPatches")
-}
 
 /*
  * Hack required until
@@ -101,6 +176,13 @@ tasks.withType<JavaCompile> {
  *
  * We're copying over patches to the JDK and forcing them into the native image at build time.
  */
+tasks.withType<JavaCompile> {
+    sourceCompatibility = JavaVersion.VERSION_22.toString()
+    targetCompatibility = JavaVersion.VERSION_22.toString()
+
+    finalizedBy("copyPatches")
+}
+
 tasks.register<Copy>("copyPatches") {
     dependsOn("build")
     mustRunAfter("compileJava")
@@ -110,9 +192,8 @@ tasks.register<Copy>("copyPatches") {
     into(layout.buildDirectory.dir("resources/main/java.base"))
 }
 
-tasks.register("buildPatchedNativeImage")
-
 tasks.withType<KotlinCompile> {
+
     compilerOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = JVM_22
