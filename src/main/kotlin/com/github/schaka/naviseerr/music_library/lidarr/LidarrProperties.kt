@@ -5,7 +5,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "clients.lidarr")
 data class LidarrProperties(
-    override val enabled: Boolean,
     override val url: String,
     override val apiKey: String,
 ) : RestClientProperties

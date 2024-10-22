@@ -28,7 +28,7 @@ class ServarrClientConfig {
                     it.header("X-Api-Key", properties.apiKey)
                     it.header(CONTENT_TYPE, APPLICATION_JSON_VALUE)
                 }
-                .target(LidarrClient::class.java, "${properties.url}/api/v3")
+                .target(LidarrClient::class.java, "${properties.url}/api/v1")
     }
 
 }
