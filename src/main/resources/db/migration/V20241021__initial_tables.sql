@@ -1,5 +1,6 @@
 CREATE TABLE artists(
   id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+  hash INT NOT NULL,
   lidarr_id BIGINT NOT NULL,
   navidrome_id VARCHAR(255), -- may not be available until Navidrome succesfully scans and identifies
   spotify_id VARCHAR(255),
@@ -19,6 +20,7 @@ CREATE INDEX artists_last_fm_id ON artists(last_fm_id);
 // each release may contain more (or different) files than listed on Musicbrainz anyway
 CREATE TABLE releases(
     id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+    hash INT NOT NULL,
     lidarr_id BIGINT NOT NULL,
     navidrome_id VARCHAR(255), -- may not be available until Navidrome succesfully scans and identifies
     spotify_id VARCHAR(255),

@@ -1,6 +1,6 @@
 package com.github.schaka.naviseerr.music_library.lidarr.dto
 
-data class Album(
+data class LidarrAlbum(
     val id: Long,
     val artistId: Long,
     val albumType: String,
