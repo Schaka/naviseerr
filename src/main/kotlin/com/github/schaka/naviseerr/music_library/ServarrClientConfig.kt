@@ -15,10 +15,6 @@ import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 @Configuration(proxyBeanMethods = false)
 class ServarrClientConfig {
 
-    companion object {
-        private val log = LoggerFactory.getLogger(this::class.java.enclosingClass)
-    }
-
     @Bean
     fun lidarrClient(properties: LidarrProperties, mapper: ObjectMapper): LidarrClient {
         return Feign.builder()

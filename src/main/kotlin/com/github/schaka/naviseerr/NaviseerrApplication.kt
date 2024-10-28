@@ -1,7 +1,8 @@
 package com.github.schaka.naviseerr
 
 import com.github.schaka.janitorr.mediaserver.NavidromeClient
-import com.github.schaka.naviseerr.music_library.RestClientProperties
+import com.github.schaka.naviseerr.config.RestClientProperties
+import com.github.schaka.naviseerr.download_client.slskd.SoulseekClient
 import com.github.schaka.naviseerr.music_library.lidarr.LidarrClient
 import org.springframework.aot.hint.RuntimeHints
 import org.springframework.aot.hint.RuntimeHintsRegistrar
@@ -28,6 +29,7 @@ class NaviseerrApplication {
         override fun registerHints(hints: RuntimeHints, classLoader: ClassLoader?) {
             hints.proxies().registerJdkProxy(LidarrClient::class.java)
             hints.proxies().registerJdkProxy(RestClientProperties::class.java)
+            hints.proxies().registerJdkProxy(SoulseekClient::class.java)
             hints.proxies().registerJdkProxy(NavidromeClient::class.java)
         }
     }

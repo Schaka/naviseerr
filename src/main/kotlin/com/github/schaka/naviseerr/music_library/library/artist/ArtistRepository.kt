@@ -6,6 +6,7 @@ import com.github.schaka.naviseerr.music_library.library.LibraryItemState.CHANGE
 import com.github.schaka.naviseerr.music_library.library.LibraryItemState.MISSING
 import com.github.schaka.naviseerr.music_library.library.LibraryItemState.UNCHANGED
 import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrArtist
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jooq.DSLContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -16,9 +17,12 @@ class ArtistRepository(
     val create: DSLContext
 ) {
 
+    private val log = KotlinLogging.logger {}
+
     fun saveArtist(artist: LidarrArtist): Long {
         val libraryArtist = convert(artist)
         if (libraryArtist.state == UNCHANGED) {
+            log.trace { "Artist ${artist.artistName }(${artist.id}) unchanged - do nothing" }
             return libraryArtist.id!!
         }
 
@@ -30,6 +34,7 @@ class ArtistRepository(
                 .set(ARTISTS.PATH, artist.path)
                 .where(ARTISTS.LIDARR_ID.eq(artist.id))
                 .execute()
+            log.info { "Artist ${artist.artistName }(${artist.id}) changed - updating" }
             return libraryArtist.id!!
         }
 
@@ -40,6 +45,7 @@ class ArtistRepository(
             .fetchOne()
             ?.into(Long::class.java)
 
+        log.trace { "New artist found - ${artist.artistName }(${artist.id}) - adding to library" }
         return artistId!!
 
     }
@@ -58,7 +64,7 @@ class ArtistRepository(
         val state = if (existingEntry == null) MISSING else CHANGED
 
         if (existingEntry?.component2() == artist.hashCode()) {
-            return Pair(CHANGED, existingEntry.component1())
+            return Pair(UNCHANGED, existingEntry.component1())
         }
 
         return Pair(state, existingEntry?.component1())

@@ -47,12 +47,14 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0")
 
     implementation("io.github.openfeign:feign-core:13.1")
     implementation("io.github.openfeign:feign-jackson:13.1")
     implementation("io.github.openfeign:feign-httpclient:13.1")
 
-    implementation("org.slf4j:jcl-over-slf4j")
+    implementation("org.slf4j:slf4j-api")
+    implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
     implementation("com.h2database:h2")
     implementation("org.flywaydb:flyway-core")
     jooqGenerator("com.h2database:h2")

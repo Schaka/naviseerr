@@ -7,6 +7,7 @@ import com.github.schaka.naviseerr.music_library.library.LibraryItemState.MISSIN
 import com.github.schaka.naviseerr.music_library.library.LibraryItemState.UNCHANGED
 import com.github.schaka.naviseerr.music_library.library.release.LibraryRelease
 import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrAlbum
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jooq.DSLContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
@@ -17,6 +18,8 @@ class ReleaseRepository(
     val create: DSLContext
 ) {
 
+    private val log = KotlinLogging.logger {}
+
     fun saveReleases(albums: List<LidarrAlbum>, artistId: Long): List<LibraryRelease> {
 
         val targetReleases = albums.map(this::convert)
@@ -25,6 +28,9 @@ class ReleaseRepository(
 
         for (entry in groupedReleases.entries) {
             if (entry.key == UNCHANGED) {
+                entry.value.forEach {
+                    log.trace { "Albums ${it.name } by artist: $artistId unchanged - do nothing" }
+                }
                 continue
             }
 
@@ -67,6 +73,8 @@ class ReleaseRepository(
                     .set(RELEASES.TYPE, album.type)
                     .where(RELEASES.ID.eq(album.id))
                     .execute()
+
+                log.info { "Album changed ${album.name} (${album.lidarrId}) - updating" }
             }
         }
     }
@@ -75,6 +83,7 @@ class ReleaseRepository(
         val query = create.insertInto(RELEASES, RELEASES.ARTIST_ID, RELEASES.HASH, RELEASES.LIDARR_ID, RELEASES.NAME, RELEASES.MUSICBRAINZ_ID, RELEASES.PATH, RELEASES.TYPE)
         for (album in albums) {
             query.values(artistId, album.hash, album.lidarrId, album.name, album.musicbrainzId, album.path, album.type)
+            log.info { "New album found ${album.name} (${album.lidarrId}) by artist $artistId - inserting" }
         }
         query.execute()
     }
@@ -93,7 +102,7 @@ class ReleaseRepository(
         val state = if (existingEntry == null) MISSING else CHANGED
 
         if (existingEntry?.component2() == album.hashCode()) {
-            return Pair(CHANGED, existingEntry.component1())
+            return Pair(UNCHANGED, existingEntry.component1())
         }
 
         return Pair(state, existingEntry?.component1())
