@@ -12,7 +12,10 @@ interface SoulseekClient {
     fun downloads(): List<Map<Object, Object>>
 
     @RequestLine("GET /searches")
-    fun searchForMedia(): List<SearchEntry>
+    fun listSearches(): List<SearchEntry>
+
+    @RequestLine("GET /searches/{id}?includeResponses=true")
+    fun searches(@Param("id") id: String): SearchEntry
 
     @RequestLine("GET /searches/{id}/responses")
     fun searchContent(@Param("id") id: String): List<SearchResult>

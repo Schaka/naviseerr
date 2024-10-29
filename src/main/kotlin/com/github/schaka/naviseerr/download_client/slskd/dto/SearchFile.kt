@@ -1,6 +1,6 @@
 package com.github.schaka.naviseerr.download_client.slskd.dto
 
-data class File(
+data class SearchFile(
     val filename: String,
     val size: Int,
     val extension: String,

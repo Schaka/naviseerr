@@ -1,6 +1,6 @@
 package com.github.schaka.naviseerr.download_client.slskd
 
-import com.github.schaka.naviseerr.download_client.slskd.dto.File
+import com.github.schaka.naviseerr.download_client.slskd.dto.SearchFile
 import com.github.schaka.naviseerr.download_client.slskd.dto.Search
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchEntry
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchResult
@@ -8,7 +8,7 @@ import kotlinx.coroutines.delay
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding
 import org.springframework.stereotype.Service
 
-@RegisterReflectionForBinding(classes = [Search::class, File::class, SearchResult::class, SearchEntry::class])
+@RegisterReflectionForBinding(classes = [Search::class, SearchFile::class, SearchResult::class, SearchEntry::class])
 @Service
 class SoulseekRestService(
 
@@ -23,7 +23,8 @@ class SoulseekRestService(
     }
 
     suspend fun waitForSearch(id: String) {
-        while (soulseekClient.searchForMedia().filter { it.id == id }.firstOrNull()?.isComplete == false) {
+        //soulseekClient.listSearches().filter { it.id == id }.firstOrNull()?
+        while (soulseekClient.searches(id).isComplete == false) {
             delay(1000)
         }
     }

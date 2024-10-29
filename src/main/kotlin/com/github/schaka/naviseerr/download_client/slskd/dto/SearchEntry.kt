@@ -4,5 +4,6 @@ data class SearchEntry(
     val searchText: String,
     val id: String,
     val state: String,
-    val isComplete: Boolean
+    val isComplete: Boolean,
+    val responses: List<SearchResult> = listOf()
 )
