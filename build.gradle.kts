@@ -204,7 +204,7 @@ tasks.register<Copy>("copyPatches") {
 tasks.withType<KotlinCompile> {
 
     compilerOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
+        freeCompilerArgs = listOf("-Xjsr305=strict --add-modules jdk.incubator.vector")
         jvmTarget = JVM_22
         javaParameters = true
     }

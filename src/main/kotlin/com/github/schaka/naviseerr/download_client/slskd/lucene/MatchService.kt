@@ -4,7 +4,6 @@ import com.github.schaka.naviseerr.download_client.slskd.dto.SearchFile
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchResult
 import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrTrack
 import org.apache.commons.text.similarity.LevenshteinDistance
-import org.apache.lucene.analysis.classic.ClassicTokenizerFactory
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory
 import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper
@@ -32,23 +31,30 @@ class MatchService {
     // this needs to be a fallback value we can always find again, but not a string that can be randomly contained in a song name
     private val impossibleSearchResult: UUID = UUID.randomUUID()
 
-    //FIXME: Divide into analyzer for index and different one for query
-    private val analyzer = CustomAnalyzer.builder()
+    private val indexAnalyzer = CustomAnalyzer.builder()
         //.addCharFilter(SceneNameDividerCharFilterFactory::class.java)
         .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "-[a-fA-F0-9]{8}", "replacement" to "")) // scene hex replacement
-        .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "[_\\.-]", "replacement" to " ")) //FIXME: replace dash in SceneNameDividerCharFilterFactory
+        .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "[_\\.]", "replacement" to " "))
         .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "[\\(\\[\\)\\]]", "replacement" to ""))
         .addTokenFilter(LowerCaseFilterFactory.NAME)
         .addTokenFilter(TrimFilterFactory.NAME)
         .addTokenFilter(StopFileFilterFactory::class.java)
         .withTokenizer(StandardTokenizerFactory.NAME)
-        //.withTokenizer(ClassicTokenizerFactory.NAME)
         .build()
 
-    val wrapper = PerFieldAnalyzerWrapper(analyzer, mapOf(
-        "artist" to analyzer,
-        "album" to analyzer,
-        "track" to analyzer,
+    /**
+     * Lucene special characters in the QUERY are *, ?, -, etc and need to be escaped
+     */
+    private val queryAnalyzer = CustomAnalyzer.builder()
+        .addTokenFilter(LowerCaseFilterFactory.NAME)
+        .addTokenFilter(TrimFilterFactory.NAME)
+        .withTokenizer(StandardTokenizerFactory.NAME)
+        .build()
+
+    val wrapper = PerFieldAnalyzerWrapper(indexAnalyzer, mapOf(
+        "artist" to indexAnalyzer,
+        "album" to indexAnalyzer,
+        "track" to indexAnalyzer,
     ))
 
     // TODO: Rework so that individual tracks can be grabbed from different search results according to best match
@@ -78,8 +84,9 @@ class MatchService {
 
         // TODO: boost FLAC *properly*
         val isFlac = relevantFiles.filter { it.extension == "flac" || cleanupFilename(it.filename).fileName.endsWith(".flac") }.size >= (relevantFiles.size / 2.0)
+                || trackResults.filter { it.file?.endsWith("flac") == true }.size >= (trackResults.size / 2.0)
         if (isFlac) {
-            score += 10
+            score += relevantFiles.size * 1.5
         }
 
         // TODO: add track match accuracy???
@@ -118,8 +125,8 @@ class MatchService {
 
         // FIXME: Turn query into 2 steps - first an exact match on the track or "Artist - TrackName", then more error prone, but tolerant Lucene search
         // FIXME: improve query significantly, account for all fields, weigh in fuzzy, prefix and phrase queries for the track
-        val parser = QueryParser("track", wrapper)
-        val query = parser.parse(track.title)
+        val parser = QueryParser("track", queryAnalyzer)
+        val query = parser.parse(QueryParser.escape(track.title))
 
         val reader = DirectoryReader.open(memoryIndex)
         val searcher = IndexSearcher(reader)
@@ -173,6 +180,7 @@ class MatchService {
         val cleanName = filename
             .replace("@", "")
             .replace("?", "")
+            .replace("\\", "/")
             .lowercase()
         return Path.of(cleanName)
     }
