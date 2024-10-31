@@ -4,8 +4,8 @@ data class SearchFile(
     val filename: String,
     val size: Int,
     val extension: String,
-    val length: Long?,
-    val bitRate: Int?,
-    val bitDepth: Int?,
-    val sampleRate: Int?,
+    val length: Long? = null,
+    val bitRate: Int? = null,
+    val bitDepth: Int? = null,
+    val sampleRate: Int? = null,
 )

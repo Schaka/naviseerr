@@ -50,6 +50,8 @@ dependencies {
 
     implementation("org.apache.commons:commons-text:1.12.0")
     implementation("org.apache.lucene:lucene-core:10.0.0")
+    implementation("org.apache.lucene:lucene-queryparser:10.0.0")
+    implementation("org.apache.lucene:lucene-analysis-common:10.0.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.9.0")
