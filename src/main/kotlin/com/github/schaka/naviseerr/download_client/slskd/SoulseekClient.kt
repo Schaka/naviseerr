@@ -17,6 +17,9 @@ interface SoulseekClient {
     @RequestLine("GET /searches/{id}?includeResponses=true")
     fun searches(@Param("id") id: String): SearchEntry
 
+    @RequestLine("DELETE /searches/{id}")
+    fun deleteSearch(@Param("id") id: String)
+
     @RequestLine("GET /searches/{id}/responses")
     fun searchContent(@Param("id") id: String): List<SearchResult>
 

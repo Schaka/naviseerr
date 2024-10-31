@@ -19,12 +19,14 @@ class SoulseekRestService(
         val search = Search(searchText)
         soulseekClient.searchForMedia(search)
         waitForSearch(search.id)
-        return soulseekClient.searchContent(search.id)
+        val searchResult = soulseekClient.searchContent(search.id)
+        soulseekClient.deleteSearch(search.id)
+        return searchResult
     }
 
     suspend fun waitForSearch(id: String) {
         //soulseekClient.listSearches().filter { it.id == id }.firstOrNull()?
-        while (soulseekClient.searches(id).isComplete == false) {
+        while (!soulseekClient.searches(id).isComplete) {
             delay(1000)
         }
     }
