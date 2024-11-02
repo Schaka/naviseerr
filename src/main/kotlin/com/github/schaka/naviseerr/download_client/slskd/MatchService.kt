@@ -11,6 +11,7 @@ import org.apache.commons.text.similarity.LevenshteinDistance
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory
 import org.apache.lucene.analysis.custom.CustomAnalyzer
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper
+import org.apache.lucene.analysis.miscellaneous.TrimFilter
 import org.apache.lucene.analysis.miscellaneous.TrimFilterFactory
 import org.apache.lucene.analysis.pattern.PatternReplaceCharFilterFactory
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory
@@ -28,12 +29,14 @@ import org.apache.lucene.queryparser.classic.QueryParser.escape
 import org.apache.lucene.search.*
 import org.apache.lucene.search.BooleanClause.Occur
 import org.apache.lucene.store.ByteBuffersDirectory
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding
 import org.springframework.stereotype.Service
 import java.nio.file.Path
 import java.util.*
 import kotlin.math.abs
 
 @Service
+@RegisterReflectionForBinding(classes = [PatternReplaceCharFilterFactory::class, LowerCaseFilterFactory::class, TrimFilterFactory::class, StopFileFilterFactory::class, StandardTokenizerFactory::class])
 class MatchService {
 
     private val log = KotlinLogging.logger {}
@@ -44,22 +47,22 @@ class MatchService {
 
     private val indexAnalyzer = CustomAnalyzer.builder()
         //.addCharFilter(SceneNameDividerCharFilterFactory::class.java)
-        .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "-[a-fA-F0-9]{8}", "replacement" to "")) // scene hex replacement
-        .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "[_\\.]", "replacement" to " "))
-        .addCharFilter(PatternReplaceCharFilterFactory.NAME, mapOf("pattern" to "[\\(\\[\\)\\]]", "replacement" to ""))
-        .addTokenFilter(LowerCaseFilterFactory.NAME)
-        .addTokenFilter(TrimFilterFactory.NAME)
+        .addCharFilter(PatternReplaceCharFilterFactory::class.java, mapOf("pattern" to "-[a-fA-F0-9]{8}", "replacement" to "")) // scene hex replacement
+        .addCharFilter(PatternReplaceCharFilterFactory::class.java, mapOf("pattern" to "[_\\.]", "replacement" to " "))
+        .addCharFilter(PatternReplaceCharFilterFactory::class.java, mapOf("pattern" to "[\\(\\[\\)\\]]", "replacement" to ""))
+        .addTokenFilter(LowerCaseFilterFactory::class.java)
+        .addTokenFilter(TrimFilterFactory::class.java)
         .addTokenFilter(StopFileFilterFactory::class.java)
-        .withTokenizer(StandardTokenizerFactory.NAME)
+        .withTokenizer(StandardTokenizerFactory::class.java)
         .build()
 
     /**
      * Lucene special characters in the QUERY are *, ?, -, etc and need to be escaped
      */
     private val queryAnalyzer = CustomAnalyzer.builder()
-        .addTokenFilter(LowerCaseFilterFactory.NAME)
-        .addTokenFilter(TrimFilterFactory.NAME)
-        .withTokenizer(StandardTokenizerFactory.NAME)
+        .addTokenFilter(LowerCaseFilterFactory::class.java)
+        .addTokenFilter(TrimFilterFactory::class.java)
+        .withTokenizer(StandardTokenizerFactory::class.java)
         .build()
 
     val wrapper = PerFieldAnalyzerWrapper(indexAnalyzer, mapOf(

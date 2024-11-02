@@ -12,7 +12,7 @@ class StopFileFilterFactory(map: Map<String, String>,
     private val words: CharArraySet
 
     init {
-        StopFilterFactory::class.java.classLoader.getResourceAsStream("lucene/stopwords.txt").use {
+        StopFilterFactory::class.java.classLoader.getResourceAsStream("com.github.schaka/lucene/stopwords.txt").use {
             val inputStreamReader = InputStreamReader(it, StandardCharsets.UTF_8)
             val bufferedReader = BufferedReader(inputStreamReader)
             val wordsList = bufferedReader.lines().toList()
