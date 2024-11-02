@@ -1,11 +1,7 @@
 package com.github.schaka.naviseerr.music_library.lidarr
 
-import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrAlbum
-import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrArtist
-import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrPage
-import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrTrack
-import com.github.schaka.naviseerr.music_library.lidarr.dto.TrackFile
-import com.github.schaka.naviseerr.music_library.lidarr.dto.WantedRecord
+import com.github.schaka.naviseerr.music_library.lidarr.dto.*
+import com.github.schaka.naviseerr.music_library.lidarr.dto.quality.QualityDefinition
 import feign.Param
 import feign.RequestLine
 import org.springframework.data.domain.Pageable
@@ -29,4 +25,10 @@ interface LidarrClient {
 
     @RequestLine("GET /wanted/missing?includeArtist=true&monitored=true")
     fun getMissing(pageable: Pageable): LidarrPage<WantedRecord>
+
+    @RequestLine("POST /command")
+    fun import(import: ImportCommand)
+
+    @RequestLine("GET /qualitydefinition")
+    fun getQualityDefinitions(): List<QualityDefinition>
 }

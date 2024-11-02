@@ -7,4 +7,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class SoulseekProperties(
     override val url: String,
     override val apiKey: String,
+    val downloadDir: String
 ) : RestClientProperties

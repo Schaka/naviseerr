@@ -1,8 +1,10 @@
 package com.github.schaka.naviseerr.download_client.slskd
 
+import com.github.schaka.naviseerr.download_client.slskd.dto.download.DownloadRequest
 import com.github.schaka.naviseerr.download_client.slskd.dto.Search
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchEntry
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchResult
+import com.github.schaka.naviseerr.download_client.slskd.dto.download.UserDownloads
 import feign.Param
 import feign.RequestLine
 
@@ -25,5 +27,11 @@ interface SoulseekClient {
 
     @RequestLine("POST /searches")
     fun searchForMedia(search: Search)
+
+    @RequestLine("POST /transfers/downloads/{username}")
+    fun startDownload(@Param("username") username: String, downloads: List<DownloadRequest>)
+
+    @RequestLine("GET /transfers/downloads/{username}")
+    fun getDownloads(@Param("username") username: String): UserDownloads
 
 }

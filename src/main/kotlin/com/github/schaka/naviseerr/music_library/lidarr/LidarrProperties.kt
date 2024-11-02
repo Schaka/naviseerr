@@ -7,4 +7,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class LidarrProperties(
     override val url: String,
     override val apiKey: String,
+    val isDocker : Boolean = true,
 ) : RestClientProperties

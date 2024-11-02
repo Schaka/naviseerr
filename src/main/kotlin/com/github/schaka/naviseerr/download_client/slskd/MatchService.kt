@@ -1,7 +1,10 @@
-package com.github.schaka.naviseerr.download_client.slskd.lucene
+package com.github.schaka.naviseerr.download_client.slskd
 
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchFile
+import com.github.schaka.naviseerr.download_client.slskd.dto.SearchMatchResult
 import com.github.schaka.naviseerr.download_client.slskd.dto.SearchResult
+import com.github.schaka.naviseerr.download_client.slskd.dto.TrackMatchResult
+import com.github.schaka.naviseerr.download_client.slskd.lucene.StopFileFilterFactory
 import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrTrack
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory
@@ -12,6 +15,9 @@ import org.apache.lucene.analysis.pattern.PatternReplaceCharFilterFactory
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
+import org.apache.lucene.document.Field.Store
+import org.apache.lucene.document.LongField
+import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField.TYPE_STORED
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.IndexWriter
@@ -58,14 +64,12 @@ class MatchService {
     ))
 
     // TODO: Rework so that individual tracks can be grabbed from different search results according to best match
-    fun matchResultToTrackList(results: List<SearchResult>, tracks: List<LidarrTrack>, albumName: String, artistName: String): SearchMatchResult {
+    fun matchResultToTrackList(results: List<SearchResult>, tracks: List<LidarrTrack>, albumName: String, artistName: String): List<SearchMatchResult> {
 
         return results.map {
             val trackResultsForSearch = tracks.map { track -> findTrackInSlskd(it, track, albumName, artistName) }
             matchTracks(it, trackResultsForSearch )
         }
-            .sortedByDescending { it.score }
-            .first()
 
     }
 
@@ -118,7 +122,8 @@ class MatchService {
             doc.add(Field("artist", info.artist ?: impossibleSearchResult.toString(), TYPE_STORED))
             doc.add(Field("album", info.album ?: impossibleSearchResult.toString(), TYPE_STORED))
             doc.add(Field("track", filename, TYPE_STORED))
-            doc.add(Field("slskd-file", file.filename, TYPE_STORED))
+            doc.add(StringField("slskd-file", file.filename, Store.YES))
+            doc.add(LongField("filesize", file.size, Store.YES))
             writer.addDocument(doc)
         }
         writer.close()
@@ -145,7 +150,12 @@ class MatchService {
             else -> -1
         }
 
-        return TrackMatchResult(track, indexResult.firstOrNull()?.getField("slskd-file")?.stringValue(), score)
+        val match = indexResult.firstOrNull()
+        val filename = match?.getField("slskd-file")?.stringValue()
+        val filesize = match?.getField("filesize")?.numericValue()?.toLong()
+
+        // TODO: null on no match?
+        return TrackMatchResult(track, filename, score, filesize)
     }
 
     private fun musicFilter(file: SearchFile): Boolean {
@@ -159,12 +169,12 @@ class MatchService {
         val filePath = cleanupFilename(file.filename)
         // no need to turn recursive, there really shouldn't be more than 3 folders for structures like /music/artist/buffer-folder/album/track.mp3 or /music/artist/track.mp3
         val firstParent = filePath.parent
-        val secondParent = firstParent.parent
-        val thirdParent = secondParent.parent
+        val secondParent = firstParent?.parent
+        val thirdParent = secondParent?.parent
 
         val firstParentFolderName = firstParent.fileName.toString().lowercase()
-        val secondParentFolderName = secondParent.fileName.toString().lowercase()
-        val thirdParentFolderName = thirdParent.fileName.toString().lowercase()
+        val secondParentFolderName = secondParent?.fileName.toString().lowercase()
+        val thirdParentFolderName = thirdParent?.fileName.toString().lowercase()
 
         val albumMatch = matches(listOf(firstParentFolderName, secondParentFolderName), albumMatchName, true)
         val artistMatch = matches(listOf(firstParentFolderName, secondParentFolderName, thirdParentFolderName), artistMatchName)
