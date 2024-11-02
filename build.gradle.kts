@@ -19,7 +19,7 @@ import org.springframework.boot.gradle.tasks.run.BootRun
 plugins {
 
     id("idea")
-    id("org.springframework.boot") version "3.4.0-RC1"
+    id("org.springframework.boot") version "3.4.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.6"
     id("net.nemerosa.versioning") version "3.1.0"
     id("org.graalvm.buildtools.native") version "0.10.3"
@@ -284,7 +284,7 @@ tasks.withType<BootBuildImage> {
     docker.publishRegistry.username = System.getenv("USERNAME") ?: "INVALID_USER"
     docker.publishRegistry.password = System.getenv("GITHUB_TOKEN") ?: "INVALID_PASSWORD"
 
-    builder = "paketobuildpacks/builder-noble-buildpackless-tiny"
+    builder = "paketobuildpacks/builder-jammy-buildpackless-tiny"
     buildpacks = listOf(
         "paketobuildpacks/environment-variables",
         "paketobuildpacks/java-native-image",
