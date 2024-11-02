@@ -22,19 +22,6 @@ The initial inspiration was Overseerr, Navidrome (hence the name), Lidarr, Lidif
 So far, it can only download your Lidarr "Wanted" list via Slskd. Matching is still inconsistent and functionality like retries on error'd downloads haven't been implemented yet.
 However, matching is pretty good so far.
 
-### Get started on testing base functionality
-
-Currently, the code is only published as a docker image to [GitHub](https://github.com/Schaka/naviseerr/pkgs/container/naviseerr).
-If you cannot use Docker, you'll have to compile it yourself from source.
-
-### Setting up Docker
-
-- follow the mapping for `application.yml` examples below
-- within that host folder, put a copy of [application.yml](https://github.com/Schaka/naviseerr/blob/develop/src/main/resources/application-template.yml) from this repository
-- adjust said copy with your own servers
-
-Slskd and Lidarr should have access to the same folders with the same mappings. Naviseerr does not attempt to map between directories and does NOT touch any files itself.
-
 ### So what's the roadmap?
 
 #### For 1.0
@@ -48,6 +35,59 @@ Slskd and Lidarr should have access to the same folders with the same mappings. 
 ### For 2.0
 - Replace Lidarr with internal Naviseerr media manager, to avoid dependency on one more app (Lidarr) and Musicbrainz by extension
 - Integration with Navidrome to keep track of what is being played, to make Spotify API recommendations based on user-plays
+
+### Get started on testing base functionality
+
+Currently, the code is only published as a docker image to [GitHub](https://github.com/Schaka/naviseerr/pkgs/container/naviseerr).
+If you cannot use Docker, you'll have to compile it yourself from source.
+
+### Setting up Docker
+
+- follow the mapping for `application.yml` examples below
+- within that host folder, put a copy of [application.yml](https://github.com/Schaka/naviseerr/blob/develop/src/main/resources/application-template.yml) from this repository
+- adjust said copy with your own servers
+
+**Slskd and Lidarr should have access to the same folders with the same mappings. Naviseerr does not attempt to map between directories and does NOT touch any files itself.**
+
+### Docker config
+
+Before using this, please make sure you've created the `application.yml` file and put it in the correct config directory you intend to map.
+The application requires it. You need to supply it, or Naviseerr will not start correctly.
+
+
+An example of a `docker-compose.yml` may look like this:
+
+Right now, only a native image is published for every build. It keeps a much lower memory and CPU footprint and doesn't require longer runtimes to achieve optimal performance (JIT).
+At some point if Naviseerr will turn into a larger long running app, a regular JVM image with the advantages of JIT may be added.
+
+That image is always tagged `:native-stable`. To get a specific version, use `:native-v1.x.x`.
+**While I do publish an arm64 version of this image, it is mostly untested.**
+
+```yml
+version: '3'
+
+services:
+  naviseerr:
+    container_name: naviseerr
+    image: ghcr.io/schaka/naviseerr:native-stable
+    user: 1000:1000 # Replace with your user who should own your application.yml file
+    volumes:
+      - /appdata/naviseerr/config/application.yml:/workspace/application.yml
+      - /appdata/naviseerr/logs:/logs
+      - /share_media:/data
+    environment:
+      # Uses https://github.com/dmikusa/tiny-health-checker supplied by paketo buildpacks
+      - THC_PATH=/health
+      - THC_PORT=8081
+    healthcheck:
+      test: [ "CMD", "/workspace/health-check" ]
+      start_period: 30s
+      interval: 5s
+      retries: 3
+```
+
+To get the latest build as found in the development branch, grab the following image: `ghcr.io/schaka/naviseerr:develop`.
+The development version of the native image is available as `ghcr.io/schaka/naviseerr:native-develop`.
 
 
 ## JetBrains

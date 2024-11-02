@@ -189,6 +189,12 @@ tasks.withType<JavaCompile> {
     sourceCompatibility = JavaVersion.VERSION_22.toString()
     targetCompatibility = JavaVersion.VERSION_22.toString()
 
+    options.compilerArgs.addAll(
+        listOf("--add-modules=jdk.incubator.vector")
+    )
+
+    options.javaModuleVersion
+
     finalizedBy("copyPatches")
 }
 
@@ -204,7 +210,7 @@ tasks.register<Copy>("copyPatches") {
 tasks.withType<KotlinCompile> {
 
     compilerOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict --add-modules jdk.incubator.vector")
+        freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = JVM_22
         javaParameters = true
     }
@@ -255,6 +261,7 @@ extra {
 tasks.withType<BootRun> {
     jvmArgs(
         arrayOf(
+            "--add-modules=jdk.incubator.vector",
             "-Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:/workspace/application.yaml",
             "-Dsun.jnu.encoding=UTF-8",
             "-Dfile.encoding=UTF-8"
@@ -264,6 +271,7 @@ tasks.withType<BootRun> {
 
 tasks.withType<ProcessAot> {
     args(
+        "--add-modules=jdk.incubator.vector",
         "-Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:/workspace/application.yaml",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dfile.encoding=UTF-8"
@@ -297,6 +305,6 @@ tasks.withType<BootBuildImage> {
         "BPE_LANG" to "en_US.UTF-8",
         "BPE_LANGUAGE" to "LANGUAGE=en_US:en",
         "BPE_LC_ALL" to "en_US.UTF-8",
-        "BP_NATIVE_IMAGE_BUILD_ARGUMENTS" to "-march=compatibility -H:+AddAllCharsets -J--patch-module=java.base=/workspace/BOOT-INF/classes/java.base"
+        "BP_NATIVE_IMAGE_BUILD_ARGUMENTS" to "-march=compatibility -H:+AddAllCharsets -J--add-modules=jdk.incubator.vector -J--patch-module=java.base=/workspace/BOOT-INF/classes/java.base"
     )
 }
