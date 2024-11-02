@@ -6,3 +6,18 @@ logging:
     com.github.schaka: INFO # Set to debug or trace to get more info about what Naviseerr is doing
   threshold:
     file: NONE # Set to TRACE to enable file logging
+
+clients:
+  lidarr:
+    url: "http://lidarr:8686"
+    api-key: "api-key-here"
+
+  soulseek:
+    url: "http://slskd:5030"
+    api-key: "api-key-here"
+    download-dir: "/data/media/music-downloads"
+
+  navidrome: # set anything, not yet in use
+    url: "http://navidrome:4533"
+    username: "username"
+    password: "password"

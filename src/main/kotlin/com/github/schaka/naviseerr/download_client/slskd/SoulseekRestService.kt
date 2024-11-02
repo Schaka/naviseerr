@@ -32,8 +32,13 @@ class SoulseekRestService(
     // TODO: re-try on error status
     // handle downloads across several users
     suspend fun download(result: SearchMatchResult): List<TransferFile> {
-        val filesToDownload = result.tracks.filter { it.file != null }.map { DownloadRequest(it.file!!, it.size!!) }
+        val filesToDownload = result.tracks
+            .filter { it.file != null }
+            .map { it.file!! }
+            .map { DownloadRequest(it.filename, it.size) }
+
         if (filesToDownload.isNotEmpty()) {
+            log.trace { "Triggered download for $filesToDownload" }
             soulseekClient.startDownload(result.result.username, filesToDownload)
         }
         val downloadResults = waitForDownload(result)
@@ -47,12 +52,13 @@ class SoulseekRestService(
     }
 
     suspend fun waitForDownload(result: SearchMatchResult): List<TransferFile> {
-        val targetFiles = result.tracks.map { it.file }.toSet()
+        val targetFiles = result.tracks.map { it.file?.filename }.toSet()
         delay(500)
         soulseekClient.getDownloads(result.result.username).directories
         while (getDownloads(result.result.username, targetFiles).any { !it.isComplete() }) {
             delay(500)
         }
+        log.debug { "Finished download from user: ${result.result.username}" }
         return getDownloads(result.result.username, targetFiles)
     }
 

@@ -6,6 +6,7 @@ import com.github.schaka.naviseerr.download_client.slskd.dto.SearchResult
 import com.github.schaka.naviseerr.download_client.slskd.dto.TrackMatchResult
 import com.github.schaka.naviseerr.download_client.slskd.lucene.StopFileFilterFactory
 import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrTrack
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory
 import org.apache.lucene.analysis.custom.CustomAnalyzer
@@ -16,14 +17,16 @@ import org.apache.lucene.analysis.standard.StandardTokenizerFactory
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.Field.Store
-import org.apache.lucene.document.LongField
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField.TYPE_STORED
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.index.IndexWriterConfig
+import org.apache.lucene.index.Term
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.IndexSearcher
+import org.apache.lucene.queryparser.classic.QueryParser.escape
+import org.apache.lucene.search.*
+import org.apache.lucene.search.BooleanClause.Occur
 import org.apache.lucene.store.ByteBuffersDirectory
 import org.springframework.stereotype.Service
 import java.nio.file.Path
@@ -32,6 +35,8 @@ import kotlin.math.abs
 
 @Service
 class MatchService {
+
+    private val log = KotlinLogging.logger {}
 
     private val yearRegex = Regex("\\s?[\\[(]\\d{4}[)\\]]")
     // this needs to be a fallback value we can always find again, but not a string that can be randomly contained in a song name
@@ -88,7 +93,7 @@ class MatchService {
 
         // TODO: boost FLAC *properly*
         val isFlac = relevantFiles.filter { it.extension == "flac" || cleanupFilename(it.filename).fileName.endsWith(".flac") }.size >= (relevantFiles.size / 2.0)
-                || trackResults.filter { it.file?.endsWith("flac") == true }.size >= (trackResults.size / 2.0)
+                || trackResults.filter { it.file?.filename?.endsWith("flac") == true }.size >= (trackResults.size / 2.0)
         if (isFlac) {
             score += relevantFiles.size * 1.5
         }
@@ -110,7 +115,7 @@ class MatchService {
 
     }
 
-    fun findTrackInSlskd(result: SearchResult, track: LidarrTrack, albumName: String, artistName: String): TrackMatchResult {
+    private fun findTrackInSlskd(result: SearchResult, track: LidarrTrack, albumName: String, artistName: String): TrackMatchResult {
         val memoryIndex = ByteBuffersDirectory()
         val indexWriterConfig = IndexWriterConfig(wrapper)
         val writer = IndexWriter(memoryIndex, indexWriterConfig)
@@ -122,27 +127,25 @@ class MatchService {
             doc.add(Field("artist", info.artist ?: impossibleSearchResult.toString(), TYPE_STORED))
             doc.add(Field("album", info.album ?: impossibleSearchResult.toString(), TYPE_STORED))
             doc.add(Field("track", filename, TYPE_STORED))
-            doc.add(StringField("slskd-file", file.filename, Store.YES))
-            doc.add(LongField("filesize", file.size, Store.YES))
+            // store other data necessary
+            doc.add(StringField("filename", file.filename, Store.YES))
             writer.addDocument(doc)
         }
         writer.close()
 
-        // FIXME: Turn query into 2 steps - first an exact match on the track or "Artist - TrackName", then more error prone, but tolerant Lucene search
-        // FIXME: improve query significantly, account for all fields, weigh in fuzzy, prefix and phrase queries for the track
-        val parser = QueryParser("track", queryAnalyzer)
-        val query = parser.parse(QueryParser.escape(track.title))
-
+        // FIXME: Turn query into 2 steps - first an exact match on "TrackName" or "Artist - TrackName", then more error prone, but tolerant Lucene search
         val reader = DirectoryReader.open(memoryIndex)
         val searcher = IndexSearcher(reader)
         val storedFields = searcher.storedFields()
 
-        val indexResult = searcher.search(query, 3).scoreDocs.map { storedFields.document(it.doc) }
+        val combinedQuery = buildQuery(track, albumName, artistName)
+
+        val indexResult = searcher.search(combinedQuery, 3).scoreDocs.map { storedFields.document(it.doc) }
 
         reader.close()
         memoryIndex.close()
 
-        // FIXME: How do we know this is truly a reliable result?
+        // TODO: maybe find a better way to score a file result - can't use Lucene score though
         val score = when (indexResult.size) {
             1 -> 2 // one exact result => big bonus
             2, 3 -> 1 // some results, but not very clear? => small bonus
@@ -151,11 +154,74 @@ class MatchService {
         }
 
         val match = indexResult.firstOrNull()
-        val filename = match?.getField("slskd-file")?.stringValue()
-        val filesize = match?.getField("filesize")?.numericValue()?.toLong()
+        val filename = match?.getField("filename")?.stringValue()
+        // some ID would obviously be better, but the filename that Slskd return is BASICALLY unique
+        val searchFile = result.files.find { it.filename == filename }
 
-        // TODO: null on no match?
-        return TrackMatchResult(track, filename, score, filesize)
+
+        // TODO: return null on no match?
+        log.trace { "Search for $artistName (Artist) $albumName (Album) - found: $searchFile" }
+        return TrackMatchResult(track, score, searchFile)
+    }
+
+    private fun buildQuery(track: LidarrTrack, artistName: String, albumName: String): BooleanQuery {
+        val parser = QueryParser("track", queryAnalyzer)
+
+        val trackName = escape(track.title)
+        val trackAndArtistName = escape("$artistName - ${track.title}")
+
+        val trackTerm = Term("track", queryAnalyzer.normalize("track", trackName))
+        val trackAndArtistTerm = Term("track", queryAnalyzer.normalize("track", trackAndArtistName))
+
+        val artistPhraseQuery = parser.createPhraseQuery("artist", artistName, 1)
+        val artistTermQuery = parser.parse(artistName)
+
+        val artistQuery = BooleanQuery.Builder()
+            .add(BoostQuery(artistPhraseQuery, 1.5F), Occur.SHOULD)
+            .add(BoostQuery(artistTermQuery, 1.0F), Occur.MUST)
+            .build()
+
+        val albumPhraseQuery = parser.createPhraseQuery("album", albumName, 1)
+        val albumTermQuery = parser.parse(albumName)
+
+        val albumQuery = BooleanQuery.Builder()
+            .add(BoostQuery(albumPhraseQuery, 1.5F), Occur.SHOULD)
+            .add(BoostQuery(albumTermQuery, 1.0F), Occur.MUST)
+            .build()
+
+        val prefixQuery = BooleanQuery.Builder()
+            .add(PrefixQuery(trackTerm), Occur.SHOULD)
+            .add(PrefixQuery(trackAndArtistTerm), Occur.SHOULD)
+            .build()
+
+        // trackTerm uses whole string, parser tokenizes
+        val termQuery = BooleanQuery.Builder()
+            .add(parser.parse(trackName), Occur.MUST)
+            .add(parser.parse(trackAndArtistName), Occur.SHOULD)
+            .build()
+
+        // this essentially checks word order
+        val phraseQuery = parser.createPhraseQuery("track", trackName, 2)
+
+        // fuzzy match with lower priority
+        //TODO: guarantee that fuzzyQuery is built from Analyzer/QueryParser
+        val fuzzyQuery = BooleanQuery.Builder()
+            .add(FuzzyQuery(trackTerm, 2), Occur.MUST)
+            .add(FuzzyQuery(trackAndArtistTerm, 2), Occur.SHOULD)
+            .build()
+
+        val trackQuery = BooleanQuery.Builder()
+            .add(BoostQuery(prefixQuery, 1.15F), Occur.SHOULD)
+            .add(BoostQuery(termQuery, 1.0F), Occur.MUST)
+            .add(BoostQuery(phraseQuery, 1.5F), Occur.SHOULD)
+            .add(BoostQuery(fuzzyQuery, 0.65F), Occur.SHOULD)
+            .build()
+
+        return BooleanQuery.Builder()
+            .add(artistQuery, Occur.SHOULD)
+            .add(albumQuery, Occur.SHOULD)
+            .add(trackQuery, Occur.MUST)
+            .build()
     }
 
     private fun musicFilter(file: SearchFile): Boolean {

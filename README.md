@@ -6,10 +6,34 @@
 
 ## Introduction
 
+### Logging
+
+To enable debug logging, change `INFO` following line in `application.yml` to either `DEBUG` or `TRACE`:
+
+```yml
+    com.github.schaka: INFO
+```
+
 ### What's going on here? Is this a usable project?
 
 Right now, it's not. There are some plans to combine a bunch of simple scripts into one more usable apps.
 The initial inspiration was Overseerr, Navidrome (hence the name), Lidarr, Lidify, Soularr and slsdk.
+
+So far, it can only download your Lidarr "Wanted" list via Slskd. Matching is still inconsistent and functionality like retries on error'd downloads haven't been implemented yet.
+However, matching is pretty good so far.
+
+### Get started on testing base functionality
+
+Currently, the code is only published as a docker image to [GitHub](https://github.com/Schaka/naviseerr/pkgs/container/naviseerr).
+If you cannot use Docker, you'll have to compile it yourself from source.
+
+### Setting up Docker
+
+- follow the mapping for `application.yml` examples below
+- within that host folder, put a copy of [application.yml](https://github.com/Schaka/naviseerr/blob/develop/src/main/resources/application-template.yml) from this repository
+- adjust said copy with your own servers
+
+Slskd and Lidarr should have access to the same folders with the same mappings. Naviseerr does not attempt to map between directories and does NOT touch any files itself.
 
 ### So what's the roadmap?
 

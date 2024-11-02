@@ -24,9 +24,12 @@ class DownloadManager(
         val result = soulseekRestService.search(searchText)
         val expectedTracks = lidarrRestService.getTracks(missing.id)
 
-        val matches = matchService.matchResultToTrackList(result, expectedTracks, missing.title, missing.artist.artistName).sortedByDescending { it.score }
+        val matches = matchService.matchResultToTrackList(result, expectedTracks, missing.title, missing.artist.artistName)
+            .sortedByDescending { it.score }
+
         if (matches.isNotEmpty()) {
             val match = matches.first()
+            log.info { "Found album ${missing.title} - downloading from ${match.result.username}" }
             val downloadFiles = soulseekRestService.download(match)
             importManager.import(missing.artistId, missing.id, missing.releases.first().id, match)
 

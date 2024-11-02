@@ -22,6 +22,7 @@ class TestSchedule(
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     suspend fun schedule() {
         //libraryManager.updateLibrary()
+        // TODO: store which ones we've already tried and don't download them again until x days later
         val toDownload = lidarrRestService.getMissing(PageRequest.of(0, 5))
         for(missing in toDownload) {
             downloadManager.downloadRelease(missing)

@@ -15,8 +15,8 @@ class MatchTest {
         val files = listOf(SearchFile(filename, 1, "flac"))
         val result = SearchResult(true, 100000, 1, files, "random-user")
         val track = LidarrTrack(1, "Honestly?", 0, "asdasd-123131-aaaa")
-        val matchResult = service.findTrackInSlskd(result, track, "", "")
-        assertThat(matchResult.file).isEqualTo(filename)
+        val matchResult = service.matchResultToTrackList(listOf(result), listOf(track), "American Football", "American Football (Covers)")
+        assertThat(matchResult.first().result.files.first().filename).isEqualTo(filename)
     }
 
     @Test
@@ -27,7 +27,7 @@ class MatchTest {
         val files = listOf(SearchFile(filename, 1, "flac"))
         val result = SearchResult(true, 100000, 1, files, "random-user")
         val track = LidarrTrack(1, "But the Regrets Are Killing Me", 0, "asdasd-123131-aaaa")
-        val matchResult = service.findTrackInSlskd(result, track, "", "")
-        assertThat(matchResult.file).isEqualTo(filename)
+        val matchResult = service.matchResultToTrackList(listOf(result), listOf(track), "American Football", "American Football (Covers)")
+        assertThat(matchResult.first().result.files.first().filename).isEqualTo(filename)
     }
 }
