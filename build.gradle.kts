@@ -193,8 +193,6 @@ tasks.withType<JavaCompile> {
         listOf("--add-modules=jdk.incubator.vector")
     )
 
-    options.javaModuleVersion
-
     finalizedBy("copyPatches")
 }
 
