@@ -67,6 +67,9 @@ jobs:
         with:
           gradle-version: 8.10.2
 
+      - name: Build # Currently required as a hack, or copyPatches output is lost
+        run: ./gradlew build
+
       - name: Build Native OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/amd64
         env:
