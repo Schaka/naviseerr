@@ -36,7 +36,9 @@ import java.util.*
 import kotlin.math.abs
 
 @Service
-@RegisterReflectionForBinding(classes = [PatternReplaceCharFilterFactory::class, LowerCaseFilterFactory::class, TrimFilterFactory::class, StopFileFilterFactory::class, StandardTokenizerFactory::class])
+@RegisterReflectionForBinding(classes =
+    [PatternReplaceCharFilterFactory::class, LowerCaseFilterFactory::class, TrimFilterFactory::class, StopFileFilterFactory::class, StandardTokenizerFactory::class]
+)
 class MatchService {
 
     private val log = KotlinLogging.logger {}
@@ -266,16 +268,16 @@ class MatchService {
 
     /**
      * Used to see if an album or artist is represented by the given directory name.
-     * If LevenshteinDistance is smaller than 20% of the total directory name, we assume it's a match.
+     * If LevenshteinDistance is smaller than 30% of the total directory name, we assume it's a match.
      *
      * TODO: needs some better matching algorithm, cleanup for parts like [FLAC], WEB, etc
-     * Maybe take into account how much longer the folder name is than the album name when calculating the 20-35% threshold
+     * Maybe take into account how much longer the folder name is than the album name when calculating the threshold
      */
     private fun matches(folders: List<String>, potentialMatch: String, removeYear: Boolean = false): String? {
         val lev = LevenshteinDistance.getDefaultInstance()
         for (folder in folders) {
             val folderName = if (removeYear) folder.replace(yearRegex, "") else folder
-            val match = lev.apply(folderName, potentialMatch) < (folder.length * 0.35)
+            val match = lev.apply(folderName, potentialMatch) < (folder.length * 0.30)
             if (match) {
                 return folder
             }
