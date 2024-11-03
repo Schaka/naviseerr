@@ -1,7 +1,7 @@
 package com.github.schaka.naviseerr.navidrome
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.schaka.janitorr.mediaserver.NavidromeClient
+import com.github.schaka.naviseerr.mediaserver.NavidromeClient
 import feign.Feign
 import feign.RequestInterceptor
 import feign.RequestTemplate
@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpHeaders.AUTHORIZATION
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE

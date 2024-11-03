@@ -1,6 +1,5 @@
-package com.github.schaka.janitorr.mediaserver
+package com.github.schaka.naviseerr.mediaserver
 
-import feign.Param
 import feign.RequestLine
 
 interface NavidromeClient {

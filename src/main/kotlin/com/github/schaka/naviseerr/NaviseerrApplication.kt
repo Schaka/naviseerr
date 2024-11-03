@@ -1,6 +1,6 @@
 package com.github.schaka.naviseerr
 
-import com.github.schaka.janitorr.mediaserver.NavidromeClient
+import com.github.schaka.naviseerr.mediaserver.NavidromeClient
 import com.github.schaka.naviseerr.config.RestClientProperties
 import com.github.schaka.naviseerr.download_client.slskd.SoulseekClient
 import com.github.schaka.naviseerr.music_library.lidarr.LidarrClient
