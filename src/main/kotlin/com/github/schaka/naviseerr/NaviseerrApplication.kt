@@ -4,7 +4,6 @@ import com.github.schaka.janitorr.mediaserver.NavidromeClient
 import com.github.schaka.naviseerr.config.RestClientProperties
 import com.github.schaka.naviseerr.download_client.slskd.SoulseekClient
 import com.github.schaka.naviseerr.music_library.lidarr.LidarrClient
-import org.flywaydb.core.internal.configuration.extensions.DeployScriptFilenameConfigurationExtension
 import org.springframework.aot.hint.RuntimeHints
 import org.springframework.aot.hint.RuntimeHintsRegistrar
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -15,7 +14,6 @@ import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.ImportRuntimeHints
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
-import java.nio.file.Path
 
 @EnableConfigurationProperties
 @EnableAsync

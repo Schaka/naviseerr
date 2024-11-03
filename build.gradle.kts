@@ -63,7 +63,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
     implementation("com.h2database:h2")
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-core:10.15.0")
     jooqGenerator("com.h2database:h2")
 
     testImplementation(kotlin("test"))
