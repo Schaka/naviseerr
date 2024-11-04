@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class DownloadManager(
-    val lidarrRestService: LidarrRestService,
-    val soulseekRestService: SoulseekRestService,
-    val matchService: MatchService,
-    val importManager: ImportManager,
+    private val lidarrRestService: LidarrRestService,
+    private val soulseekRestService: SoulseekRestService,
+    private val matchService: MatchService,
+    private val importManager: ImportManager,
 ) {
 
     private val log = KotlinLogging.logger { }

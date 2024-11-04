@@ -21,8 +21,9 @@ CREATE INDEX artists_last_fm_id ON artists(last_fm_id);
 CREATE TABLE releases(
     id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     hash INT NOT NULL,
-    lidarr_id BIGINT NOT NULL,
-    navidrome_id VARCHAR(255), -- may not be available until Navidrome succesfully scans and identifies
+    artist_id BIGINT NOT NULL,
+    lidarr_id BIGINT UNIQUE NOT NULL,
+    navidrome_id VARCHAR(255), -- may not be available until Navidrome successfully scans and identifies
     spotify_id VARCHAR(255),
     musicbrainz_id VARCHAR(255),
     last_fm_id BIGINT,
@@ -31,7 +32,7 @@ CREATE TABLE releases(
     type VARCHAR(255) NOT NULL,
     complete BOOLEAN NOT NULL DEFAULT FALSE,
     highest_quality_available BOOLEAN NOT NULL DEFAULT FALSE,
-    artist_id BIGINT NOT NULL,
+    last_download_attempt DATETIME,
 
     FOREIGN KEY(artist_id) REFERENCES artists(id)
 );
