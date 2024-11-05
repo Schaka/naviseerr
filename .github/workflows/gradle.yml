@@ -47,14 +47,6 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Export branch name
-        uses: mad9000/actions-find-and-replace-string@5
-        id: branch_name
-        with:
-          source: ${{ github.ref_name }}
-          find: '/'
-          replace: '-'
-
       - name: Log into GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -67,42 +59,8 @@ jobs:
         with:
           gradle-version: 8.10.2
 
-      - name: Build # Currently required as a hack, or copyPatches output is lost
-        run: ./gradlew build
-
-      - name: Build Native OCI Image
-        run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/amd64
+      - name: Build OCI Image
+        run: ./gradlew bootBuildImage --publishImage
         env:
           USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_PLATFORM: "amd64"
-
-      - name: Setup QEMU for ARM64 OCI Image
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: 'all'
-
-      - name: Set up Docker Buildx for ARM64 OCI Image
-        uses: docker/setup-buildx-action@v3
-        with:
-          install: true
-          platforms: 'linux/amd64,linux/arm64'
-
-      - name: Build Native ARM64 OCI Image
-        run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/arm64
-        env:
-          USERNAME: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TARGET_PLATFORM: "arm64"
-
-      - name: Combine native images into single manifest
-        uses: int128/docker-manifest-create-action@v2
-        with:
-          push: true
-          tags: | 
-            ghcr.io/schaka/naviseerr:native-${{ steps.branch_name.outputs.value }}
-            ${{ (startsWith(github.ref, 'refs/tags/v') && 'ghcr.io/schaka/naviseerr:native-stable') || '' }}
-          sources: | 
-            ghcr.io/schaka/naviseerr:native-amd64-${{ steps.branch_name.outputs.value }}
-            ghcr.io/schaka/naviseerr:native-arm64-${{ steps.branch_name.outputs.value }}
-          

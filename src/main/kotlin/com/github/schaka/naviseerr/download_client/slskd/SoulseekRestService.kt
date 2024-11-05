@@ -3,14 +3,10 @@ package com.github.schaka.naviseerr.download_client.slskd
 import com.github.schaka.naviseerr.download_client.slskd.dto.*
 import com.github.schaka.naviseerr.download_client.slskd.dto.download.DownloadRequest
 import com.github.schaka.naviseerr.download_client.slskd.dto.download.TransferFile
-import com.github.schaka.naviseerr.download_client.slskd.dto.download.UserDirectory
-import com.github.schaka.naviseerr.download_client.slskd.dto.download.UserDownloads
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.delay
-import org.springframework.aot.hint.annotation.RegisterReflectionForBinding
 import org.springframework.stereotype.Service
 
-@RegisterReflectionForBinding(classes = [Search::class, SearchFile::class, SearchResult::class, SearchEntry::class, DownloadRequest::class, UserDownloads::class])
 @Service
 class SoulseekRestService(
 

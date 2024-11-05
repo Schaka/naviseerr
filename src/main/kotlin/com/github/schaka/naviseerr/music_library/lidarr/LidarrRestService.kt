@@ -1,21 +1,12 @@
 package com.github.schaka.naviseerr.music_library.lidarr
 
 import com.github.schaka.naviseerr.music_library.lidarr.dto.*
-import com.github.schaka.naviseerr.music_library.lidarr.dto.quality.QualityDefinition
-import feign.Param
-import org.springframework.aot.hint.annotation.RegisterReflectionForBinding
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.nio.file.Path
 
-@RegisterReflectionForBinding(
-    classes = [
-        LidarrArtist::class, LidarrAlbum::class, LidarrTrack::class, TrackFile::class,
-        LidarrPage::class, WantedRecord::class, ImportCommand::class, QualityDefinition::class
-    ]
-)
 @Service
 @Transactional
 class LidarrRestService(

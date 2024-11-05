@@ -12,7 +12,6 @@ import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_22
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.springframework.boot.gradle.dsl.SpringBootExtension
-import org.springframework.boot.gradle.tasks.aot.ProcessAot
 import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
 import org.springframework.boot.gradle.tasks.run.BootRun
 
@@ -63,7 +62,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.0")
     implementation("com.h2database:h2")
-    implementation("org.flywaydb:flyway-core:10.15.0")
+    implementation("org.flywaydb:flyway-core")
     jooqGenerator("com.h2database:h2")
 
     testImplementation(kotlin("test"))
@@ -152,19 +151,6 @@ configure<IdeaModel> {
     }
 }
 
-// Required until GraalVM/Paketo builders receive a fix
-sourceSets {
-    main {
-        java {
-            srcDir("src/main")
-            srcDir("src/java.base")
-        }
-        kotlin {
-            srcDir("src/kotlin")
-        }
-    }
-}
-
 kotlin {
     jvmToolchain {
         languageVersion.set(JavaLanguageVersion.of(23))
@@ -176,15 +162,6 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-
-/*
- * Hack required until
- * - https://github.com/paketo-buildpacks/native-image/issues/344
- * - https://github.com/oracle/graal/issues/9879
- * are fixed.
- *
- * We're copying over patches to the JDK and forcing them into the native image at build time.
- */
 tasks.withType<JavaCompile> {
     sourceCompatibility = JavaVersion.VERSION_22.toString()
     targetCompatibility = JavaVersion.VERSION_22.toString()
@@ -192,17 +169,6 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.addAll(
         listOf("--add-modules=jdk.incubator.vector")
     )
-
-    finalizedBy("copyPatches")
-}
-
-tasks.register<Copy>("copyPatches") {
-    dependsOn("build")
-    mustRunAfter("compileJava")
-
-    from(layout.buildDirectory.dir("classes/java/main"))
-    include("**/*.*")
-    into(layout.buildDirectory.dir("resources/main/java.base"))
 }
 
 tasks.withType<KotlinCompile> {
@@ -241,18 +207,13 @@ extra {
         containerImageTags.add("stable")
     }
 
-    project.extra["docker.image.name"] = containerImageName
+    val registryImageName = "ghcr.io/${containerImageName}"
+    val registryImageTags = containerImageTags.map { "ghcr.io/${containerImageName}:$it" }.toList()
+
+    project.extra["docker.image.name"] = registryImageName
     project.extra["docker.image.version"] = branch
     project.extra["docker.image.source"] = build.projectSourceRoot()
-    project.extra["docker.image.tags"] = containerImageTags
-
-    val platform = System.getenv("TARGET_PLATFORM") ?: "amd64"
-    val nativeBaseTag = "native-$platform"
-    val nativeImageName = "ghcr.io/${containerImageName}:$nativeBaseTag"
-    val nativeImageTags = listOf("$nativeImageName-$branch")
-
-    project.extra["native.image.name"] = nativeImageName
-    project.extra["native.image.tags"] = nativeImageTags
+    project.extra["docker.image.tags"] = registryImageTags
 
 }
 
@@ -260,19 +221,10 @@ tasks.withType<BootRun> {
     jvmArgs(
         arrayOf(
             "--add-modules=jdk.incubator.vector",
-            "-Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:/workspace/application.yaml",
+            "-Dspring.config.additional-location=optional:file:/workspace/application.yaml",
             "-Dsun.jnu.encoding=UTF-8",
             "-Dfile.encoding=UTF-8"
         )
-    )
-}
-
-tasks.withType<ProcessAot> {
-    args(
-        "--add-modules=jdk.incubator.vector",
-        "-Dspring.config.additional-location=optional:file:/config/application.yaml,optional:file:/workspace/application.yaml",
-        "-Dsun.jnu.encoding=UTF-8",
-        "-Dfile.encoding=UTF-8"
     )
 }
 
@@ -285,24 +237,23 @@ tasks.withType<BootBuildImage> {
     builder = "paketobuildpacks/builder-jammy-buildpackless-tiny"
     buildpacks = listOf(
         "paketobuildpacks/environment-variables",
-        "paketobuildpacks/java-native-image",
+        "paketobuildpacks/adoptium",
+        "paketobuildpacks/java",
         "paketobuildpacks/health-checker"
     )
-    imageName = project.extra["native.image.name"] as String
+    imageName = project.extra["docker.image.name"] as String
     version = project.extra["docker.image.version"] as String
-    tags = project.extra["native.image.tags"] as List<String>
+    tags = project.extra["docker.image.tags"] as List<String>
     createdDate = "now"
 
     // It would also be possible to set this in the graalVmNative block, but we don't want to overwrite Spring's settings
     environment = mapOf(
-        "BP_NATIVE_IMAGE" to "true",
-        "BPL_SPRING_AOT_ENABLED" to "true",
         "BP_HEALTH_CHECKER_ENABLED" to "true",
         "BP_JVM_CDS_ENABLED" to "true",
         "BP_JVM_VERSION" to "23",
         "BPE_LANG" to "en_US.UTF-8",
         "BPE_LANGUAGE" to "LANGUAGE=en_US:en",
         "BPE_LC_ALL" to "en_US.UTF-8",
-        "BP_NATIVE_IMAGE_BUILD_ARGUMENTS" to "-march=compatibility -H:+AddAllCharsets -J--add-modules=jdk.incubator.vector -J--patch-module=java.base=/workspace/BOOT-INF/classes/java.base"
+        "BPE_APPEND_JAVA_OPTS" to "-Xmx512m -Xms256m --add-modules=jdk.incubator.vector"
     )
 }

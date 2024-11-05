@@ -29,16 +29,12 @@ import org.apache.lucene.queryparser.classic.QueryParser.escape
 import org.apache.lucene.search.*
 import org.apache.lucene.search.BooleanClause.Occur
 import org.apache.lucene.store.ByteBuffersDirectory
-import org.springframework.aot.hint.annotation.RegisterReflectionForBinding
 import org.springframework.stereotype.Service
 import java.nio.file.Path
 import java.util.*
 import kotlin.math.abs
 
 @Service
-@RegisterReflectionForBinding(classes =
-    [PatternReplaceCharFilterFactory::class, LowerCaseFilterFactory::class, TrimFilterFactory::class, StopFileFilterFactory::class, StandardTokenizerFactory::class]
-)
 class MatchService {
 
     private val log = KotlinLogging.logger {}

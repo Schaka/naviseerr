@@ -41,6 +41,10 @@ However, matching is pretty good so far.
 Currently, the code is only published as a docker image to [GitHub](https://github.com/Schaka/naviseerr/pkgs/container/naviseerr).
 If you cannot use Docker, you'll have to compile it yourself from source.
 
+Only a JVM based image is published at this point. A GraalVM native image requires too many workarounds at this point.
+Speeding up development times and making sure everything works as expected after running locally is more important at this stage of the project.
+I may pick up a native image build later on again.
+
 ### Setting up Docker
 
 - follow the mapping for `application.yml` examples below
@@ -57,19 +61,13 @@ The application requires it. You need to supply it, or Naviseerr will not start 
 
 An example of a `docker-compose.yml` may look like this:
 
-Right now, only a native image is published for every build. It keeps a much lower memory and CPU footprint and doesn't require longer runtimes to achieve optimal performance (JIT).
-At some point if Naviseerr will turn into a larger long running app, a regular JVM image with the advantages of JIT may be added.
-
-That image is always tagged `:native-stable`. To get a specific version, use `:native-v1.x.x`.
-**While I do publish an arm64 version of this image, it is mostly untested.**
-
 ```yml
 version: '3'
 
 services:
   naviseerr:
     container_name: naviseerr
-    image: ghcr.io/schaka/naviseerr:native-stable
+    image: ghcr.io/schaka/naviseerr:stable
     user: 1000:1000 # Replace with your user who should own your application.yml file
     volumes:
       - /appdata/naviseerr/config/application.yml:/workspace/application.yml
@@ -87,8 +85,6 @@ services:
 ```
 
 To get the latest build as found in the development branch, grab the following image: `ghcr.io/schaka/naviseerr:develop`.
-The development version of the native image is available as `ghcr.io/schaka/naviseerr:native-develop`.
-
 
 ## JetBrains
 Thank you to [<img src="logos/jetbrains.svg" alt="JetBrains" width="32"> JetBrains](http://www.jetbrains.com/) for providing us with free licenses to their great tools.
