@@ -70,8 +70,10 @@ services:
     image: ghcr.io/schaka/naviseerr:stable
     user: 1000:1000 # Replace with your user who should own your application.yml file
     volumes:
+      # Make sure those folders already exist. Otherwise Docker may create them as root and they will not be writeable by Naviseerr
       - /appdata/naviseerr/config/application.yml:/workspace/application.yml
-      - /appdata/naviseerr/logs:/logs
+      - /appdata/naviseerr/logs:/workspace/logs
+      - /appdata/naviseerr/database:/workspace/database
       - /share_media:/data
     environment:
       # Uses https://github.com/dmikusa/tiny-health-checker supplied by paketo buildpacks

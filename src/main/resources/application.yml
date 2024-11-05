@@ -15,8 +15,8 @@ spring:
 
 logging:
   file:
-    path: "/logs"
-    name: "/logs/naviseerr.log"
+    path: "./logs"
+    name: "./logs/naviseerr.log"
   logback:
     rollingpolicy:
       max-history: 14
@@ -24,6 +24,7 @@ logging:
       clean-history-on-start: true
   threshold:
     file: NONE
+    console: TRACE
 
 management:
   server:

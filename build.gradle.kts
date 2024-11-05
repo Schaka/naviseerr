@@ -90,7 +90,7 @@ tasks.withType<FlywayMigrateTask> {
 }
 
 configure<JooqExtension> {
-    version.set("3.19.11")  // the default (can be omitted)
+    version.set("3.19.14")  // the default (can be omitted)
     edition.set(JooqEdition.OSS)  // the default (can be omitted)
 
     configurations {
@@ -231,7 +231,8 @@ tasks.withType<BootRun> {
             "--add-modules=jdk.incubator.vector",
             "-Dspring.config.additional-location=optional:file:/workspace/application.yaml",
             "-Dsun.jnu.encoding=UTF-8",
-            "-Dfile.encoding=UTF-8"
+            "-Dfile.encoding=UTF-8",
+            "-Dorg.jooq.no-logo=true"
         )
     )
 }
@@ -270,6 +271,7 @@ jib {
             "-Dspring.config.additional-location=optional:file:/workspace/application.yaml",
             "-Dsun.jnu.encoding=UTF-8",
             "-Dfile.encoding=UTF-8",
+            "-Dorg.jooq.no-logo=true",
             "--add-modules=jdk.incubator.vector",
             "-Xms256m",
             "-Xmx512m"
@@ -317,12 +319,13 @@ tasks.withType<BootBuildImage> {
     // It would also be possible to set this in the graalVmNative block, but we don't want to overwrite Spring's settings
     environment = mapOf(
         "BP_HEALTH_CHECKER_ENABLED" to "true",
+        "BPL_JVM_CDS_ENABLED" to "true",
         "BP_JVM_CDS_ENABLED" to "true",
         "CDS_TRAINING_JAVA_TOOL_OPTIONS" to "--add-modules=jdk.incubator.vector -Dspring.profiles.active=cds",
         "BP_JVM_VERSION" to "23",
         "BPE_LANG" to "en_US.UTF-8",
         "BPE_LANGUAGE" to "LANGUAGE=en_US:en",
         "BPE_LC_ALL" to "en_US.UTF-8",
-        "BPE_APPEND_JAVA_OPTS" to "--add-modules=jdk.incubator.vector -Xmx512m -Xms256m"
+        "BPE_APPEND_JAVA_OPTS" to "--add-modules=jdk.incubator.vector -Xmx512m -Xms256m -Dorg.jooq.no-logo=true"
     )
 }
