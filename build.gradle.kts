@@ -220,8 +220,8 @@ extra {
     project.extra["docker.image.tags"] = registryImageTags
 
     //remove when there's a better way of producing both arm64 and amd64 images
-    containerImageTags.add("arm64")
-    registryImageTags.add("ghcr.io/${containerImageName}:amd64")
+    containerImageTags.add("arm64-$branch")
+    registryImageTags.add("ghcr.io/${containerImageName}:amd64-$branch")
 
 }
 
