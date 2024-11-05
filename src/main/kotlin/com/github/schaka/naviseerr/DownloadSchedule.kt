@@ -5,12 +5,14 @@ import com.github.schaka.naviseerr.music_library.library.DownloadManager
 import com.github.schaka.naviseerr.music_library.library.LibraryManager
 import com.github.schaka.naviseerr.music_library.lidarr.LidarrRestService
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.context.annotation.Profile
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.data.domain.PageRequest
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
+@Profile("!cds")
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
 class DownloadSchedule(

@@ -16,12 +16,10 @@ class ImportManager(
     private val soulseekProperties: SoulseekProperties,
     private val lidarrProperties: LidarrProperties,
     private val lidarrClient:LidarrClient,
-    private var qualities: List<QualityDefinition> = listOf()
-) {
 
-    init {
-        qualities = lidarrClient.getQualityDefinitions()
-    }
+    // writing this field from outside isn't perfect, but better than initializing inside a constructor
+    var qualities: List<QualityDefinition> = listOf()
+) {
 
     private val log = KotlinLogging.logger { }
 

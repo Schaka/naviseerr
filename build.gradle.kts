@@ -318,6 +318,7 @@ tasks.withType<BootBuildImage> {
     environment = mapOf(
         "BP_HEALTH_CHECKER_ENABLED" to "true",
         "BP_JVM_CDS_ENABLED" to "true",
+        "CDS_TRAINING_JAVA_TOOL_OPTIONS" to "--add-modules=jdk.incubator.vector -Dspring.profiles.active=cds",
         "BP_JVM_VERSION" to "23",
         "BPE_LANG" to "en_US.UTF-8",
         "BPE_LANGUAGE" to "LANGUAGE=en_US:en",
