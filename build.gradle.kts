@@ -1,3 +1,4 @@
+import com.google.cloud.tools.jib.api.buildplan.ImageFormat
 import net.nemerosa.versioning.VersioningExtension
 import org.jooq.meta.jaxb.Logging
 import nu.studer.gradle.jooq.JooqEdition
@@ -21,7 +22,7 @@ plugins {
     id("org.springframework.boot") version "3.4.0-SNAPSHOT"
     id("io.spring.dependency-management") version "1.1.6"
     id("net.nemerosa.versioning") version "3.1.0"
-    id("org.graalvm.buildtools.native") version "0.10.3"
+    id("com.google.cloud.tools.jib") version "3.4.4"
     id("nu.studer.jooq") version "9.0"
     id("org.flywaydb.flyway") version "10.20.0"
 
@@ -207,13 +208,20 @@ extra {
         containerImageTags.add("stable")
     }
 
+    project.extra["jib.image.name"] = containerImageName
+    project.extra["jib.image.tags"] = containerImageTags
+
     val registryImageName = "ghcr.io/${containerImageName}"
-    val registryImageTags = containerImageTags.map { "ghcr.io/${containerImageName}:$it" }.toList()
+    val registryImageTags = containerImageTags.map { "ghcr.io/${containerImageName}:$it" }.toMutableList()
 
     project.extra["docker.image.name"] = registryImageName
     project.extra["docker.image.version"] = branch
     project.extra["docker.image.source"] = build.projectSourceRoot()
     project.extra["docker.image.tags"] = registryImageTags
+
+    //remove when there's a better way of producing both arm64 and amd64 images
+    containerImageTags.add("arm64")
+    registryImageTags.add("ghcr.io/${containerImageName}:amd64")
 
 }
 
@@ -226,6 +234,66 @@ tasks.withType<BootRun> {
             "-Dfile.encoding=UTF-8"
         )
     )
+}
+
+jib {
+    to {
+        image = "ghcr.io/${project.extra["jib.image.name"]}"
+        tags = project.extra["jib.image.tags"] as Set<String>
+
+        auth {
+            username = System.getenv("USERNAME")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
+    from {
+        image = "eclipse-temurin:23-jdk-noble"
+        auth {
+            username = System.getenv("DOCKERHUB_USER")
+            password = System.getenv("DOCKERHUB_PASSWORD")
+        }
+        platforms {
+            /*
+            platform {
+                architecture = "amd64"
+                os = "linux"
+            }
+            */
+            platform {
+                architecture = "arm64"
+                os = "linux"
+            }
+        }
+    }
+    container {
+        jvmFlags = listOf(
+            "-Dspring.config.additional-location=optional:file:/workspace/application.yaml",
+            "-Dsun.jnu.encoding=UTF-8",
+            "-Dfile.encoding=UTF-8",
+            "--add-modules=jdk.incubator.vector",
+            "-Xms256m",
+            "-Xmx512m"
+        )
+        mainClass = "com.github.schaka.naviseerr.NaviseerrApplicationKt"
+        ports = listOf("8080")
+        format = ImageFormat.Docker // OCI not yet supported
+        volumes = listOf("/database", "/workspace")
+
+        labels.set(
+            mapOf(
+                "org.opencontainers.image.created" to "${project.extra["build.date"]}T${project.extra["build.time"]}",
+                "org.opencontainers.image.revision" to project.extra["build.revision"] as String,
+                "org.opencontainers.image.version" to project.version as String,
+                "org.opencontainers.image.title" to project.name,
+                "org.opencontainers.image.authors" to "Schaka <schaka@github.com>",
+                "org.opencontainers.image.source" to project.extra["docker.image.source"] as String,
+                "org.opencontainers.image.description" to project.description,
+            )
+        )
+
+        // Exclude all "developmentOnly" dependencies, e.g. Spring devtools.
+        configurationName.set("productionRuntimeClasspath")
+    }
 }
 
 tasks.withType<BootBuildImage> {
@@ -254,6 +322,6 @@ tasks.withType<BootBuildImage> {
         "BPE_LANG" to "en_US.UTF-8",
         "BPE_LANGUAGE" to "LANGUAGE=en_US:en",
         "BPE_LC_ALL" to "en_US.UTF-8",
-        "BPE_APPEND_JAVA_OPTS" to "-Xmx512m -Xms256m --add-modules=jdk.incubator.vector"
+        "BPE_APPEND_JAVA_OPTS" to "--add-modules=jdk.incubator.vector -Xmx512m -Xms256m"
     )
 }
