@@ -28,7 +28,7 @@ However, matching is pretty good so far.
 - Users duplicated from Navidrome, or if possible direct authentication against Navidrome
 - Use Lidarr as media manager to send requests to, similar to Overseerr
 - Create a local copy of Lidarr library to treat as "the truth" and populate with additional metadata from LastFM and Spotify
-- Scan Lidarr's "Wanted" list and use slsdk API to pull media, then trigger manual import via Lidarr API (or copy + ) - using metadata from above library
+- Scan Lidarr's "Wanted" list and use slsdk API to pull media, then trigger manual import via Lidarr API (or copy) - using metadata from above library
 - Import to Navidrome, if Navidrome isn't pointed towards Lidarr library already
 - Use Spotify API to make recommendations on existing library, existing Navidrome playlists and past Naviseerr requests
 

@@ -2,6 +2,7 @@ package com.github.schaka.naviseerr.navidrome
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.schaka.naviseerr.mediaserver.NavidromeClient
+import com.github.schaka.naviseerr.navidrome.NavidromeClientConfig.NavidromeUserInterceptor
 import feign.Feign
 import feign.RequestInterceptor
 import feign.RequestTemplate
@@ -28,15 +29,11 @@ class NavidromeClientConfig {
     }
 
     @Bean
-    fun jellyfinUserClient(properties: NavidromeProperties, mapper: ObjectMapper): NavidromeClient {
-        return Feign.builder()
-                .decoder(JacksonDecoder(mapper))
-                .encoder(JacksonEncoder(mapper))
-                .requestInterceptor(NavidromeUserInterceptor(properties))
-                .target(NavidromeClient::class.java, properties.url)
+    fun navidromeClient(properties: NavidromeProperties, mapper: ObjectMapper): NavidromeClient {
+        return newNavidromeClient(properties, mapper)
     }
 
-    private class NavidromeUserInterceptor(
+    internal class NavidromeUserInterceptor(
             val properties: NavidromeProperties
     ) : RequestInterceptor {
 
@@ -47,12 +44,13 @@ class NavidromeClientConfig {
 
             if (lastUpdate.plusMinutes(30).isBefore(LocalDateTime.now())) {
                 val userInfo = getUserInfo(properties)
-                accessToken = userInfo.body?.get("AccessToken").toString()
+                accessToken = userInfo.body?.get("token").toString()
                 lastUpdate = LocalDateTime.now()
                 log.info("Logged in to Navidrome as {} {}", properties.username, accessToken)
             }
 
-            template.header("X-Nd-Authorization", accessToken)
+            // TODO: get more info, like subsonic token, if necessary
+            template.header("X-Nd-Authorization", "Bearer $accessToken")
             template.header("X-Nd-Client-Unique-Id", clientId)
             template.header(CONTENT_TYPE, APPLICATION_JSON_VALUE)
         }
@@ -74,4 +72,12 @@ class NavidromeClientConfig {
 
     }
 
+}
+
+fun newNavidromeClient(properties: NavidromeProperties, mapper: ObjectMapper): NavidromeClient {
+    return Feign.builder()
+        .decoder(JacksonDecoder(mapper))
+        .encoder(JacksonEncoder(mapper))
+        .requestInterceptor(NavidromeUserInterceptor(properties))
+        .target(NavidromeClient::class.java, "${properties.url}/api")
 }

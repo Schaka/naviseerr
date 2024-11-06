@@ -4,7 +4,7 @@ import feign.RequestLine
 
 interface NavidromeClient {
 
-    @RequestLine("GET /Users")
-    fun listUsers(): List<String>
+    @RequestLine("GET /user")
+    fun listUsers(): List<Map<Object, Object>>
 
 }
