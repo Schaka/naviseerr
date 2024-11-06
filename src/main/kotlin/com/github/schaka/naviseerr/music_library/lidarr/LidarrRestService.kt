@@ -18,6 +18,7 @@ class LidarrRestService(
             val albums = lidarrClient.getAlbums(artist.id).map { album ->
                 val tracks = lidarrClient.getTrackFiles(album.id)
                 //FIXME: if empty, get filenaming structure from Lidarr and build folder name from it
+                // this isn't very easy, we don't have access to a lot of the necessary variables
                 val trackPath = tracks.firstOrNull() ?: TrackFile(-1, Path.of(artist.path).resolve("dummy-album/dummy-track.flac").toString())
                 val path = Path.of(trackPath.path)
                 album.path = path.parent.toString()

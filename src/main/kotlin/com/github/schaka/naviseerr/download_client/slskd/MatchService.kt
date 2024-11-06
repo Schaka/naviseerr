@@ -81,6 +81,7 @@ class MatchService {
 
     private fun matchTracks(result: SearchResult, trackResults: List<TrackMatchResult>): SearchMatchResult {
         var score = 10.0
+
         if (!result.hasFreeUploadSlot) {
             // small punishment for not *currently* having an upload slot
             score -= 1
@@ -92,7 +93,6 @@ class MatchService {
         val relevantFiles = result.files.filter(this::musicFilter)
         score -= abs(relevantFiles.size - trackResults.size)
 
-        // TODO: boost FLAC *properly*
         val isFlac = relevantFiles.filter { it.extension == "flac" || cleanupFilename(it.filename).fileName.endsWith(".flac") }.size >= (relevantFiles.size / 2.0)
                 || trackResults.filter { it.file?.filename?.endsWith("flac") == true }.size >= (trackResults.size / 2.0)
         if (isFlac) {
@@ -104,14 +104,24 @@ class MatchService {
             score += trackResult.score
         }
 
+        // boosting bitDepth
+        relevantFiles.filter { it.bitDepth == 24 }.forEach { score+= 1.0 / relevantFiles.size }
 
-        // TODO: boost bitdepth
+        trackResults.forEach {
+            val expectedRunTime = it.lidarrTrack.duration
+            val runTime = it.file?.length ?: 0
 
-        //TODO: match runtime
+            if (it.file != null && musicFilter(it.file) && expectedRunTime > 0 && runTime > 0
+                && abs(expectedRunTime - runTime) <= expectedRunTime * 0.1) {
+                // within 10% of each other's runtime
+                score+= 1.0 / relevantFiles.size
+            }
+        }
 
+
+        // Better matching via Artist + Album + Track, maybe?
         // https://github.com/guessit-io/guessit type for audio (part extraction)
         // beets match? https://github.com/beetbox/beets
-
         return SearchMatchResult(result, score, trackResults)
 
     }
@@ -134,7 +144,7 @@ class MatchService {
         }
         writer.close()
 
-        // FIXME: Turn query into 2 steps - first an exact match on "TrackName" or "Artist - TrackName", then more error prone, but tolerant Lucene search
+        // TODO: Turn query into 2 steps - first an exact match on "TrackName" or "Artist - TrackName", then more error prone, but tolerant Lucene search
         val reader = DirectoryReader.open(memoryIndex)
         val searcher = IndexSearcher(reader)
         val storedFields = searcher.storedFields()
