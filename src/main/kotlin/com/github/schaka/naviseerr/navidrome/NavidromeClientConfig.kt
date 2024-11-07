@@ -2,22 +2,14 @@ package com.github.schaka.naviseerr.navidrome
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.schaka.naviseerr.mediaserver.NavidromeClient
-import com.github.schaka.naviseerr.navidrome.NavidromeClientConfig.NavidromeUserInterceptor
-import feign.Feign
 import feign.RequestInterceptor
 import feign.RequestTemplate
-import feign.jackson.JacksonDecoder
-import feign.jackson.JacksonEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpHeaders.CONTENT_TYPE
-import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.ResponseEntity
-import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
 
 @Configuration(proxyBeanMethods = false)
@@ -44,7 +36,7 @@ class NavidromeClientConfig {
 
             if (lastUpdate.plusMinutes(30).isBefore(LocalDateTime.now())) {
                 val userInfo = getUserInfo(properties)
-                accessToken = userInfo.body?.get("token").toString()
+                accessToken = userInfo.body?.token.toString()
                 lastUpdate = LocalDateTime.now()
                 log.info("Logged in to Navidrome as {} {}", properties.username, accessToken)
             }
@@ -55,29 +47,10 @@ class NavidromeClientConfig {
             template.header(CONTENT_TYPE, APPLICATION_JSON_VALUE)
         }
 
-        private fun getUserInfo(properties: NavidromeProperties): ResponseEntity<Map<*, *>> {
-            val login = RestTemplate()
-            val headers = HttpHeaders()
-            headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-
-            val loginInfo = """
-                {
-                  "username": "${properties.username}",
-                  "password": "${properties.password}"
-                }
-            """.trimIndent()
-
-            return login.exchange("${properties.url}/auth/login", HttpMethod.POST, HttpEntity(loginInfo, headers), Map::class.java)
+        private fun getUserInfo(properties: NavidromeProperties): ResponseEntity<NavidromeUserInfo> {
+            return loginToNavidrome(properties)
         }
 
     }
 
-}
-
-fun newNavidromeClient(properties: NavidromeProperties, mapper: ObjectMapper): NavidromeClient {
-    return Feign.builder()
-        .decoder(JacksonDecoder(mapper))
-        .encoder(JacksonEncoder(mapper))
-        .requestInterceptor(NavidromeUserInterceptor(properties))
-        .target(NavidromeClient::class.java, "${properties.url}/api")
 }

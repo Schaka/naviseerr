@@ -3,7 +3,9 @@ package com.github.schaka.naviseerr.navidrome
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
 
 @Component
@@ -19,12 +21,25 @@ class NavidromeAuthenticationManager(
         )
 
         try {
-            val client = newNavidromeClient(userProperties, objectMapper)
-            val user = client.listUsers()
+            val client = loginToNavidrome(userProperties).body!!
+            var roles = mutableListOf(SimpleGrantedAuthority("ROLE_USER"))
+            if (client.isAdmin) {
+                roles.add(SimpleGrantedAuthority("ROLE_ADMIN"))
+            }
+            val userClient = newNavidromeClient(userProperties, objectMapper)
+            val principal = NavidromeSessionUser(
+                client.id,
+                client.username,
+                userClient,
+                client.name,
+                client.lastFMApiKey
+            )
+
+            return UsernamePasswordAuthenticationToken(principal, "hidden-password", roles)
         } catch (e: Exception) {
             throw BadCredentialsException("Couldn't log in to navidrome client", e)
         }
 
-        return authentication
+        throw BadCredentialsException("Couldn't log in to navidrome client")
     }
 }
