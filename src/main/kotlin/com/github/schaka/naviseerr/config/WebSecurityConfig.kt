@@ -28,7 +28,7 @@ class WebSecurityConfig(
                 it
                     .loginPage("/login")
                     .failureUrl("/login-error")
-                    .defaultSuccessUrl("/dashboard", true)
+                    .defaultSuccessUrl("/", true)
                     .permitAll()
             }
             .logout {

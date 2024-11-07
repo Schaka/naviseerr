@@ -43,6 +43,9 @@ node_modules
 .env.local
 .env.*.local
 pnpm-debug.log*
+.frontend-gradle-plugin/
+node
+.vite
 
 ### MacOS crap ###
 .DS_Store

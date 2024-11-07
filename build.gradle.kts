@@ -25,6 +25,7 @@ plugins {
     id("com.google.cloud.tools.jib") version "3.4.4"
     id("nu.studer.jooq") version "9.0"
     id("org.flywaydb.flyway") version "10.20.0"
+    id("org.siouan.frontend-jdk21") version "9.0.0"
 
     kotlin("jvm") version "2.0.21"
     kotlin("plugin.spring") version "2.0.21"
@@ -181,6 +182,36 @@ tasks.withType<KotlinCompile> {
         jvmTarget = JVM_22
         javaParameters = true
     }
+}
+
+frontend {
+    nodeDistributionProvided.set(false)
+    nodeVersion.set("22.11.0")
+    nodeInstallDirectory.set(project.layout.projectDirectory.dir("node"))
+    corepackVersion.set("latest")
+
+    installScript.set("install")
+    cleanScript.set("run clean")
+    assembleScript.set("run build")
+    //checkScript.set("run type-check")
+    //publishScript.set("run publish")
+
+    packageJsonDirectory.set(project.layout.projectDirectory.dir("src/main/frontend"))
+    cacheDirectory.set(project.layout.projectDirectory.dir(".frontend-gradle-plugin"))
+}
+
+tasks.register<Copy>("processFrontendResources") {
+    // Directory containing the artifacts produced by the frontend project
+    val frontendBuildDir = project.layout.projectDirectory.dir("src/main/frontend/dist")
+    val frontendResourcesDir = project.layout.buildDirectory.dir("resources/main/public")
+
+    dependsOn(":assembleFrontend")
+    from(frontendBuildDir)
+    into(frontendResourcesDir)
+}
+
+tasks.named<Task>("processResources") {
+    dependsOn("processFrontendResources")
 }
 
 configure<VersioningExtension> {
