@@ -37,6 +37,13 @@ out/
 ### VS Code ###
 .vscode/
 
+## NodeJS
+node_modules
+/dist
+.env.local
+.env.*.local
+pnpm-debug.log*
+
 ### MacOS crap ###
 .DS_Store
 **/.DS_Store
