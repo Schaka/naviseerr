@@ -70,6 +70,7 @@ import { ref } from 'vue';
 import { api } from 'boot/axios'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { AxiosError } from 'axios';
 
 const username = ref<string>('');
 const password = ref<string>('');
@@ -85,7 +86,7 @@ const attemptLogin = async () => {
 
   await api.post('/login', data)
     .then(() => router.push('/'))
-    .catch(err => {
+    .catch((err: AxiosError)  => {
       if(err.response.status === 401) {
         $q.notify( {
           message: "Login failed. Please double check you're using the correct credentials for your Navidrome account.",
