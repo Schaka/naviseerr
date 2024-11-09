@@ -15,23 +15,24 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
+    "axios": "^1.7.7",
     "quasar": "^2.16.0",
     "vue": "^3.4.18",
     "vue-router": "^4.0.12"
   },
   "devDependencies": {
+    "@quasar/app-vite": "^2.0.0-beta.12",
+    "@types/node": "^20.5.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "vite-plugin-checker": "^0.8.0",
-    "vue-tsc": "^2.0.29",
-    "eslint": "^8.57.0",
-    "eslint-plugin-vue": "^9.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "prettier": "^3.0.3",
-    "@types/node": "^20.5.9",
-    "@quasar/app-vite": "^2.0.0-beta.12",
     "autoprefixer": "^10.4.2",
-    "typescript": "~5.5.3"
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "~5.5.3",
+    "vite-plugin-checker": "^0.8.0",
+    "vue-tsc": "^2.0.29"
   },
   "engines": {
     "node": "^24 || ^22 || ^20 || ^18",
