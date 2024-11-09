@@ -20,17 +20,33 @@ Right now, it's not. There are some plans to combine a bunch of simple scripts i
 The initial inspiration was Overseerr, Navidrome (hence the name), Lidarr, Lidify, Soularr and slsdk.
 
 So far, it can only download your Lidarr "Wanted" list via Slskd. Matching is still inconsistent and functionality like retries on error'd downloads haven't been implemented yet.
-However, matching is pretty good so far.
+However, matching is in a state usable enough to start out populating your library.
+
+### Development
+The Quasar/VueJS frontend is compiled as part of the build process. There is no separate build step and no reverse proxy hiding 2 servers.
+While not at all required, it is recommended to run a separate frontend server during development.
+
+- install NodeJS 22.10+
+- `corepack enable pnpm`
+- navigate to `src/main/frontend` and `pnpm dev` to start the server
+
+If you require the backend to be running, the easiest way is
+`./gradlew bootRun`
+
+However, I highly recommend IntelliJ Idea (Community Edition), as it integrates fairly seamlessly with both.
+
+**I have no idea what I'm doing regarding frontend, so expect bad practices and general ugliness.**
 
 ### So what's the roadmap?
 
 #### For 1.0
-- Users duplicated from Navidrome, or if possible direct authentication against Navidrome
-- Use Lidarr as media manager to send requests to, similar to Overseerr
-- Create a local copy of Lidarr library to treat as "the truth" and populate with additional metadata from LastFM and Spotify
-- Scan Lidarr's "Wanted" list and use slsdk API to pull media, then trigger manual import via Lidarr API (or copy) - using metadata from above library
-- Import to Navidrome, if Navidrome isn't pointed towards Lidarr library already
-- Use Spotify API to make recommendations on existing library, existing Navidrome playlists and past Naviseerr requests
+- [x] Users duplicated from Navidrome, or if possible direct authentication against Navidrome
+- [x] Create a local copy of Lidarr library to treat as "the truth"
+- [ ] ...and populate with additional metadata from LastFM and Spotify
+- [x] Scan Lidarr's "Wanted" list and use slsdk API to pull media, then trigger manual import via Lidarr API (or copy) - using metadata from above library
+- [ ] Use Lidarr as media manager to send requests to, similar to Overseerr
+- [ ] Import to Navidrome, if Navidrome isn't pointed towards Lidarr library already
+- [ ] Use Spotify API to make recommendations on existing library, existing Navidrome playlists and past Naviseerr requests
 
 ### For 2.0
 - Replace Lidarr with internal Naviseerr media manager, to avoid dependency on one more app (Lidarr) and Musicbrainz by extension

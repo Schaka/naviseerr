@@ -54,7 +54,7 @@ class WebSecurityConfig(
                     ).permitAll()
                     .requestMatchers(antMatcher("/**/favicon.ico")).permitAll()
 
-                    .requestMatchers("*.html", "/error").permitAll()
+                    .requestMatchers("/*.html", "/error").permitAll()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().authenticated()
             }
