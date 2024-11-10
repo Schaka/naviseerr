@@ -1,22 +1,14 @@
-package com.github.schaka.naviseerr.config
+package com.github.schaka.naviseerr.config.auth
 
 import com.github.schaka.naviseerr.navidrome.NavidromeAuthenticationManager
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
+import com.github.schaka.naviseerr.navidrome.NavidromeSessionUser
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpMethod.GET
-import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatus.NO_CONTENT
-import org.springframework.http.HttpStatus.UNAUTHORIZED
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.core.Authentication
-import org.springframework.security.core.AuthenticationException
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.AuthenticationFailureHandler
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
@@ -53,8 +45,7 @@ class WebSecurityConfig(
                         antMatcher("/**/*.otf"),
                     ).permitAll()
                     .requestMatchers(antMatcher("/**/favicon.ico")).permitAll()
-
-                    .requestMatchers("/*.html", "/error").permitAll()
+                    .requestMatchers("/index.html", "/error").permitAll()
                     .requestMatchers("/api/**").authenticated()
                     .anyRequest().authenticated()
             }
@@ -80,7 +71,10 @@ class WebSecurityConfig(
 
         // used to serve the correct route inside our VueJS application
         @GetMapping("/login")
-        fun login(): ModelAndView {
+        fun login(@AuthenticationPrincipal principal: Any): ModelAndView {
+            if (principal is NavidromeSessionUser) {
+                return ModelAndView("redirect:/")
+            }
             return ModelAndView("index.html")
         }
     }

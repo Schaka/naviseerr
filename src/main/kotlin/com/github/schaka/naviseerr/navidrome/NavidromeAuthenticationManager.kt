@@ -1,6 +1,7 @@
 package com.github.schaka.naviseerr.navidrome
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.schaka.naviseerr.user.UserRepository
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component
 @Component
 class NavidromeAuthenticationManager(
     private val navidromeProperties: NavidromeProperties,
+    private val userRepository: UserRepository,
     private val objectMapper: ObjectMapper
 ) : AuthenticationManager {
 
@@ -35,6 +37,7 @@ class NavidromeAuthenticationManager(
                 client.lastFMApiKey
             )
 
+            userRepository.createNewUser(principal.id)
             return UsernamePasswordAuthenticationToken(principal, "hidden-password", roles)
         } catch (e: Exception) {
             throw BadCredentialsException("Couldn't log in to navidrome client", e)

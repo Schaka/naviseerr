@@ -16,8 +16,8 @@ CREATE INDEX artists_spotify_id ON artists(spotify_id);
 CREATE INDEX artists_musicbrainz_id ON artists(musicbrainz_id);
 CREATE INDEX artists_last_fm_id ON artists(last_fm_id);
 
-// we don't keep track of each file that's part of a release
-// each release may contain more (or different) files than listed on Musicbrainz anyway
+-- we don't keep track of each file that's part of a release
+-- each release may contain more (or different) files than listed on Musicbrainz anyway
 CREATE TABLE releases(
     id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     hash INT NOT NULL,
@@ -43,3 +43,9 @@ CREATE INDEX releases_spotify_id ON releases(spotify_id);
 CREATE INDEX releases_musicbrainz_id ON releases(musicbrainz_id);
 CREATE INDEX releases_last_fm_id ON releases(last_fm_id);
 
+-- User table - there's additional data we need to maintain on a per-user basis
+CREATE TABLE navidrome_users(
+    id VARCHAR(255) PRIMARY KEY NOT NULL, -- uuid type string from navidrome
+    last_fm_api_key VARCHAR(255),
+    last_fm_username VARCHAR(255)
+);

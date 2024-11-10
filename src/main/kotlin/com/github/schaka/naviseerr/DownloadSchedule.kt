@@ -5,6 +5,7 @@ import com.github.schaka.naviseerr.music_library.library.DownloadManager
 import com.github.schaka.naviseerr.music_library.library.LibraryManager
 import com.github.schaka.naviseerr.music_library.lidarr.LidarrRestService
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.context.annotation.DependsOn
 import org.springframework.context.annotation.Profile
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component
 
 @Profile("!cds")
 @Component
-@Order(Ordered.LOWEST_PRECEDENCE)
+@DependsOn("libraryUpdater")
 class DownloadSchedule(
     val lidarrRestService: LidarrRestService,
     val soulseekRestService: SoulseekRestService,
@@ -34,7 +35,7 @@ class DownloadSchedule(
         val toDownload = lidarrRestService.getMissing(PageRequest.of(0, batchSize))
         while (toDownload.hasNext()) {
             for (missing in toDownload.content) {
-                if (validIds.contains(missing.id)) {
+                if (!validIds.contains(missing.id)) {
                     log.debug { "Already searched ${missing.title}, trying again later" }
                     continue
                 }
@@ -45,7 +46,7 @@ class DownloadSchedule(
 
             // every hour, we try and run this, rather than running it indefinitely
             if (validIds.size >= batchSize) {
-                libraryManager.updateLastDownload(validIds)
+                libraryManager.updateLastDownload(attemptedDownload)
                 break
             }
         }

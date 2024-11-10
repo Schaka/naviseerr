@@ -1,4 +1,4 @@
-package com.github.schaka.naviseerr.config
+package com.github.schaka.naviseerr.config.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest

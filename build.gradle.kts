@@ -202,7 +202,7 @@ frontend {
 tasks.register<Copy>("processFrontendResources") {
     // Directory containing the artifacts produced by the frontend project
     val frontendBuildDir = project.layout.projectDirectory.dir("src/main/frontend/dist/spa")
-    val frontendResourcesDir = project.layout.buildDirectory.dir("resources/main/public")
+    val frontendResourcesDir = project.layout.buildDirectory.dir("resources/main/static")
 
     dependsOn(":assembleFrontend")
     from(frontendBuildDir)
