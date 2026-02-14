@@ -1,0 +1,68 @@
+// Spotify-like global styles
+
+.sidebar {
+  background-color: #000 !important;
+}
+
+.sidebar .q-item {
+  border-radius: 8px;
+  margin: 2px 8px;
+  color: #b3b3b3;
+  transition: color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    color: #fff;
+  }
+
+  &.q-router-link--active,
+  &.q-item--active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.sidebar .q-item__section--avatar {
+  min-width: 40px;
+}
+
+.toolbar-blur {
+  background: rgba(18, 18, 18, 0.7) !important;
+  backdrop-filter: blur(20px);
+}
+
+// Thin custom scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+// Firefox scrollbar
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+// Login page
+.login-page {
+  background: #121212;
+  min-height: 100vh;
+}
+
+.login-card {
+  background: #181818;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+}

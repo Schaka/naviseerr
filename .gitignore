@@ -1,0 +1,42 @@
+HELP.md
+.gradle
+build/
+.kotlin
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+!buildpacks/
+!buildpacks/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### VS Code ###
+.vscode/
+
+### MacOS crap ###
+.DS_Store
+**/.DS_Store
+
+### Frontend ###
+node_modules/
+node/
+.frontend-gradle-plugin/
+dist/
+.quasar/
+.vite/
+
+# Local
+application-local.yml
+docker-compose.yml
+logs
+database
+
+# AI bullshit
+.claude
