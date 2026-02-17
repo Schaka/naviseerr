@@ -22,6 +22,17 @@ The initial inspiration was Overseerr, Navidrome (hence the name), Lidarr, Lidif
 So far, it can only download your Lidarr "Wanted" list via Slskd. Matching is still inconsistent and functionality like retries on error'd downloads haven't been implemented yet.
 However, matching is in a state usable enough to start out populating your library.
 
+### Stance on AI usage
+
+I am not against the use of GenAI as a whole. However, all code needs to be reviewed, understood (and adjusted) by humans.
+Any PR opened by an AI agent or user without any manual oversight will be automaticaly closed without further comment. 
+
+PRs may also not be summarized by an AI. The entire text explaining what they intend to do needs to be written by a human. The only exception is using a translation tool for submitters who don't feel confident in their English skills.
+
+The general guideline should be to only use LLMs as a rubber duck and discuss more architectural solutions and prototyping.
+The code it generates is generally not good enough to pass review unless explicitly guided by a knowledgeable developer and contained to a few classes at most.
+
+
 ### Development
 The Quasar/VueJS frontend is compiled as part of the build process. There is no separate build step and no reverse proxy hiding 2 servers.
 While not at all required, it is recommended to run a separate frontend server during development.
@@ -36,73 +47,27 @@ If you require the backend to be running, the easiest way is
 However, I highly recommend IntelliJ Idea (Community Edition), as it integrates fairly seamlessly with both.
 
 **I have no idea what I'm doing regarding frontend, so expect bad practices and general ugliness.**
+**To make changes faster, I relied on AI, heavily, to create the frontend.**
 
 ### So what's the roadmap?
 
 #### For 1.0
 - [x] Users duplicated from Navidrome, or if possible direct authentication against Navidrome
-- [x] Create a local copy of Lidarr library to treat as "the truth"
+- [x] Pull listening activity from Navidrome per user
 - [ ] ...and populate with additional metadata from LastFM and Spotify
-- [x] Scan Lidarr's "Wanted" list and use slsdk API to pull media, then trigger manual import via Lidarr API (or copy) - using metadata from above library
-- [ ] Use Lidarr as media manager to send requests to, similar to Overseerr
-- [ ] Import to Navidrome, if Navidrome isn't pointed towards Lidarr library already
-- [ ] Use Spotify API to make recommendations on existing library, existing Navidrome playlists and past Naviseerr requests
+- [ ] **Require** Lidarr with Plugins, so Tubifarry/Slskd implementation can be assumed
+- [ ] Allow for requests directly to Lidarr, store all requests - validate against library availability in Navidrome, similar to Seerr
+- [ ] Orchestrate tagging downloads with metadata, if they were pulled in via Usenet or Slskd downloads
+- [ ] build out different recommendations via Listenbrainz, LastFM, Audiomuse-AI
+- [ ] add user-triggerable jobs to generate playlists based on charts, Audiomuse, etc
 
 ### For 2.0
-- Replace Lidarr with internal Naviseerr media manager, to avoid dependency on one more app (Lidarr) and Musicbrainz by extension
-- Integration with Navidrome to keep track of what is being played, to make Spotify API recommendations based on user-plays
-
-### Get started on testing base functionality
-
-Currently, the code is only published as a docker image to [GitHub](https://github.com/Schaka/naviseerr/pkgs/container/naviseerr).
-If you cannot use Docker, you'll have to compile it yourself from source.
-
-Only a JVM based image is published at this point. A GraalVM native image requires too many workarounds at this point.
-Speeding up development times and making sure everything works as expected after running locally is more important at this stage of the project.
-I may pick up a native image build later on again.
-
-### Setting up Docker
-
-- follow the mapping for `application.yml` examples below
-- within that host folder, put a copy of [application.yml](https://github.com/Schaka/naviseerr/blob/develop/src/main/resources/application-template.yml) from this repository
-- adjust said copy with your own servers
-
-**Slskd and Lidarr should have access to the same folders with the same mappings. Naviseerr does not attempt to map between directories and does NOT touch any files itself.**
-
-### Docker config
-
-Before using this, please make sure you've created the `application.yml` file and put it in the correct config directory you intend to map.
-The application requires it. You need to supply it, or Naviseerr will not start correctly.
+- support Jellyfin as a replacement for Navidrome
+- Pull playlists from Spotify and YT Music
+- Add support to pull recommendations from OpenAI compatible API (with tool calling)
+- Octofiesta as backup for slskd
 
 
-An example of a `docker-compose.yml` may look like this:
-
-```yml
-version: '3'
-
-services:
-  naviseerr:
-    container_name: naviseerr
-    image: ghcr.io/schaka/naviseerr:stable
-    user: 1000:1000 # Replace with your user who should own your application.yml file
-    volumes:
-      # Make sure those folders already exist. Otherwise Docker may create them as root and they will not be writeable by Naviseerr
-      - /appdata/naviseerr/config/application.yml:/workspace/application.yml
-      - /appdata/naviseerr/logs:/workspace/logs
-      - /appdata/naviseerr/database:/workspace/database
-      - /share_media:/data
-    environment:
-      # Uses https://github.com/dmikusa/tiny-health-checker supplied by paketo buildpacks
-      - THC_PATH=/health
-      - THC_PORT=8081
-    healthcheck:
-      test: [ "CMD", "/workspace/health-check" ]
-      start_period: 30s
-      interval: 5s
-      retries: 3
-```
-
-To get the latest build as found in the development branch, grab the following image: `ghcr.io/schaka/naviseerr:develop`.
 
 ## JetBrains
 Thank you to [<img src="logos/jetbrains.svg" alt="JetBrains" width="32"> JetBrains](http://www.jetbrains.com/) for providing us with free licenses to their great tools.

@@ -206,7 +206,7 @@ tasks.withType<BootBuildImage> {
 
     environment = mapOf(
         "BP_NATIVE_IMAGE" to "false",
-        "BP_JVM_AOTCACHE_ENABLED" to "true",
+        "BP_JVM_AOTCACHE_ENABLED" to "false",
         "BP_SPRING_AOT_ENABLED" to "false",
         "BP_JVM_VERSION" to "25",
         "LC_ALL" to "en_US.UTF-8",
