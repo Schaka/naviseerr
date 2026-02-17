@@ -1,124 +1,71 @@
 <template>
-  <q-layout>
-    <q-page-container>
-      <q-page class="flex flex-center">
-        <div
-          id="background"
-          :class="$q.dark.isActive ? 'dark_gradient' : 'normal_gradient'"
-        ></div>
-        <q-btn
-          color="white"
-          class="absolute-top-right"
-          flat
-          round
-          @click="$q.dark.toggle()"
-          :icon="$q.dark.isActive ? 'nights_stay' : 'wb_sunny'"
+  <div class="login-page flex flex-center">
+    <div class="login-card q-pa-xl">
+      <div class="text-h4 text-white text-center q-mb-lg">Naviseerr</div>
+
+      <q-form @submit="onSubmit" class="q-gutter-md">
+        <q-input
+          v-model="username"
+          label="Username"
+          filled
+          dark
+          :rules="[val => !!val || 'Username is required']"
         />
-        <q-card
-          class="login-form"
-          v-bind:style="
-            $q.platform.is.mobile ? { width: '80%' } : { width: '30%' }
-          "
-        >
-          <q-img src="/statics/images/pharmacy.jpg"></q-img>
-          <q-card-section>
-            <q-avatar
-              size="74px"
-              class="absolute"
-              style="top: 0;right: 25px;transform: translateY(-50%);"
-            >
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-            </q-avatar>
-            <div class="row no-wrap items-center">
-              <div class="col text-h6 ellipsis">
-                Log in to Dashboard
-              </div>
-            </div>
-          </q-card-section>
-          <q-card-section>
-            <q-form class="q-gutter-md">
-              <q-input filled v-model="username" label="Username" lazy-rules />
 
-              <q-input
-                type="password"
-                filled
-                v-model="password"
-                label="Password"
-                lazy-rules
-              />
+        <q-input
+          v-model="password"
+          label="Password"
+          type="password"
+          filled
+          dark
+          :rules="[val => !!val || 'Password is required']"
+        />
 
-              <div>
-                <q-btn
-                  label="Login"
-                  type="button"
-                  color="primary"
-                  @click="attemptLogin"
-                />
+        <div v-if="error" class="text-negative text-center text-body2">
+          {{ error }}
+        </div>
 
-              </div>
-            </q-form>
-          </q-card-section>
-        </q-card>
-      </q-page>
-    </q-page-container>
-  </q-layout>
+        <q-btn
+          type="submit"
+          label="Log In"
+          color="primary"
+          class="full-width"
+          size="lg"
+          rounded
+          no-caps
+          :loading="submitting"
+        />
+      </q-form>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from 'stores/auth'
 
-import { ref } from 'vue';
-import { api } from 'boot/axios'
-import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
-import { AxiosError } from 'axios';
+const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
 
-const username = ref<string>('');
-const password = ref<string>('');
+const username = ref('')
+const password = ref('')
+const error = ref('')
+const submitting = ref(false)
 
-const router = useRouter();
-const $q = useQuasar();
+async function onSubmit() {
+  error.value = ''
+  submitting.value = true
 
-const attemptLogin = async () => {
-
-  const data = new URLSearchParams()
-  data.append('username', username.value)
-  data.append('password', password.value)
-
-  await api.post('/login', data)
-    .then(() => router.push('/'))
-    .catch((err: AxiosError)  => {
-      if(err.response?.status === 401) {
-        $q.notify( {
-          message: "Login failed. Please double check you're using the correct credentials for your Navidrome account.",
-          position: 'top-right',
-          color: 'red',
-          badgeColor: 'red'
-        })
-      }
-
-      // handle unexpected error?
-
-    })
+  try {
+    await authStore.login(username.value, password.value)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    await router.push(redirect)
+  } catch {
+    error.value = 'Invalid username or password'
+  } finally {
+    submitting.value = false
+  }
 }
-
 </script>
-
-<style>
-#background {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: 50% 50%;
-}
-.normal_gradient {
-  background: linear-gradient(145deg, rgb(74, 94, 137) 15%, #b61924 70%);
-}
-.dark_gradient {
-  background: linear-gradient(145deg, rgb(11, 26, 61) 15%, #4c1014 70%);
-}
-.login-form {
-  position: absolute;
-}
-</style>

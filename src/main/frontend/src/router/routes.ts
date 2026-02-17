@@ -1,28 +1,30 @@
-import { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    public?: boolean
+  }
+}
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/login', component: () => import('pages/LoginPage.vue')
+    path: '/login',
+    component: () => import('pages/LoginPage.vue'),
+    meta: { public: true },
   },
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      {
-        path: '', component: () => import('pages/IndexPage.vue'),
-      },
-      {
-        path: '/user', component: () => import('pages/UserPage.vue')
-      }
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'profile', component: () => import('pages/UserSettingsPage.vue') },
+      { path: 'advanced', component: () => import('pages/AdvancedOptionsPage.vue') },
     ],
   },
-
-  // Always leave this as last one,
-  // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    redirect: '/',
   },
-];
+]
 
-export default routes;
+export default routes

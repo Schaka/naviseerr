@@ -1,45 +1,35 @@
 {
   "name": "naviseerr",
-  "version": "0.0.1",
-  "description": "Music manager",
+  "version": "1.0.0",
+  "description": "Naviseerr Frontend",
   "productName": "Naviseerr",
-  "author": "schaka <2223171+Schaka@users.noreply.github.com>",
-  "type": "module",
+  "author": "Schaka",
   "private": true,
+  "packageManager": "pnpm@9.12.3",
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
     "lint:fix": "eslint --ext .js,.ts,.vue ./ --fix",
     "clean": "echo \"No clean specified\" && exit 0",
-    "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
-    "test": "echo \"No test specified\" && exit 0",
-    "dev": "quasar dev",
-    "build": "quasar build"
+    "build": "quasar build",
+    "dev": "quasar dev"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
     "axios": "^1.7.7",
+    "pinia": "^3.0.4",
     "quasar": "^2.16.0",
     "vue": "^3.4.18",
     "vue-router": "^4.0.12"
   },
   "devDependencies": {
     "@quasar/app-vite": "^2.0.0-beta.12",
-    "@types/node": "^20.5.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "autoprefixer": "^10.4.2",
+    "autoprefixer": "^10.4.19",
     "eslint": "^8.57.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-vue": "^9.0.0",
-    "prettier": "^3.0.3",
-    "typescript": "~5.5.3",
-    "vite-plugin-checker": "^0.8.0",
-    "vue-tsc": "^2.0.29"
-  },
-  "engines": {
-    "node": "^24 || ^22 || ^20 || ^18",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
-  },
-  "packageManager": "pnpm@9.12.3"
+    "eslint-plugin-vue": "^9.23.0",
+    "typescript": "~5.8.3",
+    "vite-plugin-checker": "^0.12.0",
+    "vue-tsc": "^3.2.4"
+  }
 }

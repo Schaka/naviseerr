@@ -1,12 +1,10 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_22
 
 group = "com.github.schaka.naviseerr"
 
 plugins {
-    kotlin("jvm") version "2.0.21"
-    `kotlin-dsl` version "5.1.2"
-    `embedded-kotlin` version "5.1.2"
+    kotlin("jvm") version "2.3.0"
 }
 
 repositories {
@@ -17,13 +15,13 @@ repositories {
 }
 
 tasks.withType<JavaCompile> {
-    sourceCompatibility = JavaVersion.VERSION_22.toString()
-    targetCompatibility = JavaVersion.VERSION_22.toString()
+    sourceCompatibility = JavaVersion.VERSION_25.toString()
+    targetCompatibility = JavaVersion.VERSION_25.toString()
 }
 
 tasks.withType<KotlinCompile> {
     compilerOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = JVM_22
+        jvmTarget = JvmTarget.JVM_25
     }
 }

@@ -1,4 +1,6 @@
 spring:
+  main:
+    keep-alive: true
   cache:
     type: caffeine
     caffeine:
@@ -9,30 +11,44 @@ spring:
       enabled: true
 
   datasource:
-    url: "jdbc:h2:file:./database/naviseerr"
+    url: jdbc:postgresql://localhost:5432/naviseerr
     username: naviseerr
-    password: naviseerr-pw
+    password: password
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
 
 logging:
-  file:
-    path: "./logs"
-    name: "./logs/naviseerr.log"
   logback:
     rollingpolicy:
       max-history: 14
       max-file-size: 100MB
       clean-history-on-start: true
-  threshold:
-    file: NONE
-    console: TRACE
 
-management:
-  server:
-    port: 8081
-  endpoints:
-    web:
-      base-path: "/"
-  endpoint:
-    health:
-      probes:
-        enabled: true
+clients:
+  default:
+    connect-timeout: 60s
+    read-timeout: 60s
+
+navidrome:
+  url: "http://192.168.1.1:4533"
+  admin-user: "admin"
+  admin-pass: "admin_password"
+
+lastfm:
+  api-key: "your_lastfm_app_api_key"
+  shared-secret: "your_lastfm_app_shared_secret"
+  url: "http://ws.audioscrobbler.com/2.0"
+
+listenbrainz:
+  url: "https://api.listenbrainz.org/1"
+
+lidarr:
+  url: "http://192.168.1.1:8686"
+  api-key: "your-api-key"
+
+slskd:
+  url: "http://192.168.1.3:5030"
+  api-key: "your-api-key"
+  download-dir: "/naviseerr-accessible/download-dir"

@@ -1,5 +1,6 @@
 package com.github.schaka.naviseerr
 
+import org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -19,4 +20,3 @@ class NaviseerrApplication
 fun main(args: Array<String>) {
     runApplication<NaviseerrApplication>(*args)
 }
-

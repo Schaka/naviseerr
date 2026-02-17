@@ -1,25 +1,13 @@
-// Quasar SCSS (& Sass) Variables
-// --------------------------------------------------
-// To customize the look and feel of this app, you can override
-// the Sass/SCSS variables found in Quasar's source Sass/SCSS files.
+// Spotify-inspired dark palette
 
-// Check documentation for full list of Quasar variables
+$primary   : #1DB954;
+$secondary : #1ED760;
+$accent    : #535353;
 
-// Your own variables (that are declared here) and Quasar's own
-// ones will be available out of the box in your .vue/.scss/.sass files
-
-// It's highly recommended to change the default colors
-// to match your app's branding.
-// Tip: Use the "Theme Builder" on Quasar's documentation website.
-
-$primary   : rgba(15, 23, 42, 0.89);
-$secondary : #26A69A;
-$accent    : #dd4b39;
-
-$dark      : #1D1D1D;
+$dark      : #181818;
 $dark-page : #121212;
 
-$positive  : #21BA45;
-$negative  : #C10015;
-$info      : #31CCEC;
-$warning   : #F2C037;
+$positive  : #1DB954;
+$negative  : #E22134;
+$info      : #2E77D0;
+$warning   : #F59B23;

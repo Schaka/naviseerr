@@ -5,18 +5,8 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+!buildpacks/
+!buildpacks/**/bin/
 
 ### IntelliJ IDEA ###
 .idea
@@ -27,33 +17,26 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
 ### VS Code ###
 .vscode/
-
-## NodeJS
-node_modules
-/dist
-.env.local
-.env.*.local
-pnpm-debug.log*
-.frontend-gradle-plugin/
-node
-.vite
 
 ### MacOS crap ###
 .DS_Store
 **/.DS_Store
 
+### Frontend ###
+node_modules/
+node/
+.frontend-gradle-plugin/
+dist/
+.quasar/
+.vite/
+
 # Local
 application-local.yml
-application-seedbox.yml
 docker-compose.yml
 logs
 database
+
+# AI bullshit
+.claude
