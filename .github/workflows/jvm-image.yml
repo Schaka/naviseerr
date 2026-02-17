@@ -12,7 +12,7 @@ on:
     tags:
       - '**'
     branches:
-      - 'develop'
+      - 'main'
 
   pull_request:
     paths:
