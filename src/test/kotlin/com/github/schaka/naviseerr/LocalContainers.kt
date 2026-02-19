@@ -1,6 +1,7 @@
 package com.github.schaka.naviseerr
 
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.bind.Bindable.mapOf
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
 import org.testcontainers.containers.BindMode
@@ -11,6 +12,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import kotlin.collections.mapOf
 
 object LocalContainers {
 
@@ -39,6 +41,7 @@ object LocalContainers {
         val lidarrApiKey = readLidarrApiKey(lidarr)
         setupLidarr(lidarr, lidarrApiKey)
         setupLidarrAuth(lidarr, lidarrApiKey)
+        setupLidarrTubifarry(lidarr, lidarrApiKey)
 
         val navidromePort = navidrome.getMappedPort(4533)
         val lidarrPort = lidarr.getMappedPort(8686)
@@ -262,6 +265,64 @@ object LocalContainers {
                 )
                 .retrieve()
                 .toBodilessEntity()
+        }
+    }
+
+    private fun setupLidarrTubifarry(lidarr: GenericContainer<*>, apiKey: String) {
+        val client = RestClient.create()
+        val port = lidarr.getMappedPort(8686);
+        val baseUrl = "http://localhost:${port}/api/v1"
+
+        val existingPlugins = client.get()
+            .uri("$baseUrl/system/plugins")
+            .header("X-Api-Key", apiKey)
+            .retrieve()
+            .body(String::class.java) ?: "[]"
+
+        if (existingPlugins.trim() == "[]") {
+            client.post()
+                .uri("$baseUrl/command")
+                .header("X-Api-Key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                    mapOf(
+                        "githubUrl" to "https://github.com/TypNull/Tubifarry",
+                        "name" to "InstallPlugin",
+                    )
+                )
+                .retrieve()
+                .toBodilessEntity()
+
+            Thread.sleep(30000) // wait for plugin to install
+
+            client.post()
+                .uri("$baseUrl/system/restart")
+                .header("X-Api-Key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .toBodilessEntity()
+
+            waitForLidarr(client, port, apiKey)
+        }
+    }
+
+    private fun waitForLidarr(
+        client: RestClient,
+        port: Int,
+        apiKey: String
+    ) {
+        while (true) {
+            Thread.sleep(1000)
+            try {
+                client.get()
+                    .uri("http://localhost:${port}/ping")
+                    .header("X-Api-Key", apiKey)
+                    .retrieve()
+                    .toBodilessEntity()
+                break;
+            } catch (e: Exception) {
+                // not restarted yet
+            }
         }
     }
 }
