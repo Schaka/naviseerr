@@ -26,7 +26,7 @@ object LocalContainers {
 
     init {
         createDirectories()
-        writeSlskdConfigIfAbsent()
+        writeSlskdConfig()
 
         val postgres = createPostgres()
         val navidrome = createNavidrome()
@@ -38,6 +38,7 @@ object LocalContainers {
         setupNavidrome(navidrome)
         val lidarrApiKey = readLidarrApiKey(lidarr)
         setupLidarr(lidarr, lidarrApiKey)
+        setupLidarrAuth(lidarr, lidarrApiKey)
 
         val navidromePort = navidrome.getMappedPort(4533)
         val lidarrPort = lidarr.getMappedPort(8686)
@@ -56,8 +57,8 @@ object LocalContainers {
         System.setProperty("slskd.download-dir", musicLibrary.resolve("temp-downloads").toAbsolutePath().toString())
 
         log.info("Started Navidrome at http://localhost:$navidromePort => Login via: admin/admin")
-        log.info("Started Lidarr at http://localhost:$lidarrPort => Login via: admin/admin")
-        log.info("Started Slskd at http://localhost:$slskdPort => Login via: admin/admin")
+        log.info("Started Lidarr at http://localhost:$lidarrPort => Login via: admin/admin | API-Key: $lidarrApiKey")
+        log.info("Started Slskd at http://localhost:$slskdPort => Login via: admin/admin | API-Key: naviseerr-local-dev")
     }
 
     private fun createDirectories() {
@@ -73,25 +74,26 @@ object LocalContainers {
     }
 
     /**
-     * slskd does not have env vars for all share/directory options, so a minimal config
-     * is written on first run. Credentials are always supplied via environment variables.
-     * The file is only written once — subsequent runs reuse the existing config.
+     * Writes the slskd config on every startup. The file is fully managed here —
+     * Soulseek network credentials come from environment variables and are never written to disk.
      */
-    private fun writeSlskdConfigIfAbsent() {
-        val configFile = localRuntime.resolve("slskd/slskd.yml")
-        if (!Files.exists(configFile)) {
-            Files.writeString(
-                configFile,
-                """
-                shares:
-                  directories:
-                    - path: /music
-                directories:
-                  downloads: /downloads
-                  incomplete: /downloads/incomplete
-                """.trimIndent()
-            )
-        }
+    private fun writeSlskdConfig() {
+        Files.writeString(
+            localRuntime.resolve("slskd/slskd.yml"),
+            """
+            web:
+              authentication:
+                disabled: false
+                username: admin
+                password: admin
+            shares:
+              directories:
+                - path: /music
+            directories:
+              downloads: /downloads
+              incomplete: /downloads/incomplete
+            """.trimIndent()
+        )
     }
 
     private fun createPostgres(): PostgreSQLContainer {
@@ -133,7 +135,8 @@ object LocalContainers {
 
     /**
      * slskd uses /app as its data directory in the official Docker image (binary is in PATH).
-     * Credentials are read from the host environment so they are never written to disk.
+     * Soulseek network credentials are read from the host environment and never written to disk.
+     * Web UI credentials (admin/admin) are set in the managed slskd.yml written before startup.
      */
     private fun createSlskd(): GenericContainer<*> {
         return GenericContainer("slskd/slskd:latest")
@@ -186,6 +189,46 @@ object LocalContainers {
             Thread.sleep(2_000)
         }
         throw IllegalStateException("Could not read Lidarr API key from /config/config.xml after waiting 20 seconds")
+    }
+
+    /**
+     * Enables Forms authentication in Lidarr and creates the initial admin/admin user.
+     * The API key bypasses web auth entirely, so this works regardless of auth state.
+     * On subsequent runs the user already exists and the POST to /user will fail gracefully.
+     * If auth is already set to something other than None, setup is skipped entirely.
+     */
+    private fun setupLidarrAuth(lidarr: GenericContainer<*>, apiKey: String) {
+        val client = RestClient.create()
+        val baseUrl = "http://localhost:${lidarr.getMappedPort(8686)}/api/v1"
+        try {
+            val hostConfigRaw = client.get()
+                .uri("$baseUrl/config/host")
+                .header("X-Api-Key", apiKey)
+                .retrieve()
+                .body(String::class.java) ?: return
+
+            if (!hostConfigRaw.contains(Regex("\"authenticationMethod\"\\s*:\\s*\"none\""))) {
+                return
+            }
+
+            val updatedConfig = hostConfigRaw
+                .replace(Regex("\"authenticationMethod\"\\s*:\\s*\"none\""), "\"authenticationMethod\":\"forms\"")
+                .replace(Regex("\"authenticationRequired\"\\s*:\\s*\"disabled\""), "\"authenticationRequired\":\"enabled\"")
+                .replace(Regex("\"username\"\\s*:\\s*\"\""), "\"username\":\"admin\"")
+                .replace(Regex("\"password\"\\s*:\\s*\"\""), "\"password\":\"admin\"")
+                .replace(Regex("\"passwordConfirmation\"\\s*:\\s*\"\""), "\"passwordConfirmation\":\"admin\"")
+
+            client.put()
+                .uri("$baseUrl/config/host")
+                .header("X-Api-Key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(updatedConfig)
+                .retrieve()
+                .toBodilessEntity()
+
+        } catch (e: Exception) {
+            log.warn("Lidarr auth setup incomplete: ${e.message} — configure admin/admin manually at http://localhost:${lidarr.getMappedPort(8686)}")
+        }
     }
 
     /**
