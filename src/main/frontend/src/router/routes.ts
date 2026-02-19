@@ -17,6 +17,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'search', component: () => import('pages/SearchPage.vue') },
+      { path: 'requests', component: () => import('pages/RequestsPage.vue') },
       { path: 'profile', component: () => import('pages/UserSettingsPage.vue') },
       { path: 'advanced', component: () => import('pages/AdvancedOptionsPage.vue') },
     ],

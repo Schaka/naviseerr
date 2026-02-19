@@ -1,8 +1,11 @@
-package com.github.schaka.naviseerr.music_library.lidarr.dto
+package com.github.schaka.naviseerr.lidarr.dto
 
-import com.github.schaka.naviseerr.lidarr.dto.LidarrAlbum
+import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.annotation.Nulls
 
 data class LidarrArtist(
+
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     val id: Long,
     val artistName: String,
     val cleanName: String,

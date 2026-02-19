@@ -71,6 +71,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(module = "mockito-core")
     }
+    testImplementation("org.testcontainers:testcontainers")
+    testImplementation("org.testcontainers:testcontainers-postgresql")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 }

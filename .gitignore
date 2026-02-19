@@ -38,5 +38,9 @@ docker-compose.yml
 logs
 database
 
+# Local dev runtime
+music-library/
+local-runtime/
+
 # AI bullshit
 .claude

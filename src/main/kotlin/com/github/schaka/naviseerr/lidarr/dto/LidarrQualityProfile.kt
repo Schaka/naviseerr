@@ -1,0 +1,9 @@
+package com.github.schaka.naviseerr.lidarr.dto
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class LidarrQualityProfile(
+    val id: Int,
+    val name: String
+)

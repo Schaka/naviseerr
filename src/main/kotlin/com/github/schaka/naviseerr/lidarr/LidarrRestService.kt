@@ -1,6 +1,8 @@
 package com.github.schaka.naviseerr.lidarr
 
+import com.github.schaka.naviseerr.lidarr.dto.LidarrArtist
 import com.github.schaka.naviseerr.lidarr.dto.LidarrPage
+import com.github.schaka.naviseerr.lidarr.dto.TrackFile
 import com.github.schaka.naviseerr.lidarr.dto.WantedRecord
 import com.github.schaka.naviseerr.music_library.lidarr.dto.*
 import org.springframework.data.domain.PageRequest
@@ -21,7 +23,10 @@ class LidarrRestService(
                 val tracks = lidarrClient.getTrackFiles(album.id)
                 //FIXME: if empty, get filenaming structure from Lidarr and build folder name from it
                 // this isn't very easy, we don't have access to a lot of the necessary variables
-                val trackPath = tracks.firstOrNull() ?: TrackFile(-1, Path.of(artist.path).resolve("dummy-album/dummy-track.flac").toString())
+                val trackPath = tracks.firstOrNull() ?: TrackFile(
+                    -1,
+                    Path.of(artist.path).resolve("dummy-album/dummy-track.flac").toString()
+                )
                 val path = Path.of(trackPath.path)
                 album.path = path.parent.toString()
 
