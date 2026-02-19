@@ -37,7 +37,7 @@ class RequestService(
         val lidarrLookup = lidarrClient.lookupArtist("lidarr:$mbArtistId")
         val config = lidarrConfigCache.getConfig()
 
-        val lidarrArtistId = if (lidarrLookup.isNotEmpty()) {
+        val lidarrArtistId = if (lidarrLookup.isNotEmpty() && lidarrLookup.first().id != 0L) {
             lidarrLookup.first().id
         } else {
             val added = lidarrClient.addArtist(
