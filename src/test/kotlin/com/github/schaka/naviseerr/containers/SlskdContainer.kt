@@ -31,7 +31,7 @@ class SlskdContainer(musicLibrary: Path, localRuntime: Path, network: Network? =
         withEnv("SLSKD_API_KEY", "naviseerr-local-dev")
         withEnv("SLSKD_REMOTE_CONFIGURATION", "true")
         withFileSystemBind(musicLibrary.toString(), "/music", BindMode.READ_ONLY)
-        withFileSystemBind(musicLibrary.resolve("temp-downloads").toString(), "/downloads", BindMode.READ_WRITE)
+        withFileSystemBind(localRuntime.resolve("downloads").toString(), "/downloads", BindMode.READ_WRITE)
         withFileSystemBind(slskdDir.toString(), "/app", BindMode.READ_WRITE)
         withCreateContainerCmdModifier { it.withUser("1000:1000") }
         waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))

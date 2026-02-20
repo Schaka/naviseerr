@@ -60,7 +60,7 @@ class LocalDevEnvironment {
         System.setProperty("lidarr.api-key", lidarrApiKey)
         System.setProperty("slskd.url", "http://localhost:$slskdPort")
         System.setProperty("slskd.api-key", "naviseerr-local-dev")
-        System.setProperty("slskd.download-dir", musicLibrary.resolve("temp-downloads").toAbsolutePath().toString())
+        System.setProperty("slskd.download-dir", localRuntime.resolve("downloads").toAbsolutePath().toString())
     }
 
     fun logStartupInfo() {
@@ -72,8 +72,8 @@ class LocalDevEnvironment {
     private fun createSharedDirectories() {
         listOf(
             musicLibrary,
-            musicLibrary.resolve("temp-downloads"),
-            musicLibrary.resolve("temp-downloads/incomplete"),
+            localRuntime.resolve("downloads"),
+            localRuntime.resolve("downloads/incomplete"),
         ).forEach(Files::createDirectories)
     }
 }

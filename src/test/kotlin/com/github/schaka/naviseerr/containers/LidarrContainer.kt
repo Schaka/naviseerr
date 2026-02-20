@@ -17,7 +17,7 @@ class LidarrContainer(musicLibrary: Path, localRuntime: Path, network: Network? 
         withEnv("PGID", "1000")
         withEnv("TZ", "UTC")
         withFileSystemBind(musicLibrary.toString(), "/music", BindMode.READ_WRITE)
-        withFileSystemBind(musicLibrary.resolve("temp-downloads").toString(), "/downloads", BindMode.READ_WRITE)
+        withFileSystemBind(localRuntime.resolve("downloads").toString(), "/downloads", BindMode.READ_WRITE)
         withFileSystemBind(localRuntime.resolve("lidarr").toString(), "/config", BindMode.READ_WRITE)
         waitingFor(Wait.forHttp("/ping").forPort(8686).withStartupTimeout(Duration.ofMinutes(5)))
         network?.let { withNetwork(it).withNetworkAliases("lidarr") }
