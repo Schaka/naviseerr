@@ -18,6 +18,7 @@ class NavidromeContainer(musicLibrary: Path, localRuntime: Path, network: Networ
         withEnv("ND_SESSIONTIMEOUT", "24h")
         withFileSystemBind(musicLibrary.toString(), "/music", BindMode.READ_ONLY)
         withFileSystemBind(localRuntime.resolve("navidrome").toString(), "/data", BindMode.READ_WRITE)
+        withCreateContainerCmdModifier { it.withUser("1000:1000") }
         withExposedPorts(4533)
         waitingFor(Wait.forHttp("/ping").forPort(4533).withStartupTimeout(Duration.ofMinutes(2)))
         network?.let { withNetwork(it).withNetworkAliases("navidrome") }

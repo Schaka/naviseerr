@@ -19,6 +19,7 @@ fun createLocalDevNetwork(): Network {
                         .exec()
                 }
             }
+
             dockerClient.removeNetworkCmd(network.id).exec()
         }
 

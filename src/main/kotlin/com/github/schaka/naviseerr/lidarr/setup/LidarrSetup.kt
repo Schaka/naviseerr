@@ -1,13 +1,16 @@
 package com.github.schaka.naviseerr.lidarr.setup
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
+import tools.jackson.databind.json.JsonMapper
 
 class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
 
     private val log = LoggerFactory.getLogger(LidarrSetup::class.java)
     private val client = RestClient.create()
+    private val mapper = JsonMapper()
 
     fun setupRootFolder() {
         val existingFolders = client.get()
@@ -105,6 +108,43 @@ class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
                 .toBodilessEntity()
 
             waitForReady()
+        }
+    }
+
+    /**
+     * Adds SoulseekDownloadProtocol to every delay profile that doesn't already have it.
+     * Lidarr's ProtocolSpecification rejects releases whose protocol isn't listed (and allowed)
+     * in the delay profile matched by the artist's tags. The default profile only ships with
+     * Usenet and Torrent, so Soulseek results are silently rejected without this step.
+     * Must be called after installTubifarry() so the protocol is registered with Lidarr.
+     */
+    fun setupSoulseekDelayProfile() {
+        val profilesRaw = client.get()
+            .uri("$baseUrl/api/v1/delayprofile")
+            .header("X-Api-Key", apiKey)
+            .retrieve()
+            .body(String::class.java) ?: return
+
+        val profiles = mapper.readTree(profilesRaw)
+        for (profile in profiles) {
+            val items = profile.path("items")
+            if (items.any { it.path("protocol").asString() == "SoulseekDownloadProtocol" }) continue
+
+            val profileObj = profile.deepCopy()
+            (profileObj.path("items") as ArrayNode).addObject().apply {
+                put("name", "Soulseek")
+                put("protocol", "SoulseekDownloadProtocol")
+                put("allowed", true)
+                put("delay", 0)
+            }
+
+            client.put()
+                .uri("$baseUrl/api/v1/delayprofile/${profile.path("id").asInt()}")
+                .header("X-Api-Key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(mapper.writeValueAsString(profileObj))
+                .retrieve()
+                .toBodilessEntity()
         }
     }
 

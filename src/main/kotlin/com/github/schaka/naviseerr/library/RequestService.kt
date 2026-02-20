@@ -76,7 +76,7 @@ class RequestService(
         val config = lidarrConfigCache.getConfig()
 
         val artistLookup = lidarrClient.lookupArtist("lidarr:$mbArtistId")
-        val lidarrArtistId = if (artistLookup.isNotEmpty()) {
+        val lidarrArtistId = if (artistLookup.isNotEmpty() && artistLookup.first().id != 0L) {
             artistLookup.first().id
         } else {
             val added = lidarrClient.addArtist(
@@ -93,7 +93,7 @@ class RequestService(
         }
 
         val albumLookup = lidarrClient.lookupAlbum("lidarr:$mbAlbumId")
-        val lidarrAlbumId = if (albumLookup.isNotEmpty()) {
+        val lidarrAlbumId = if (albumLookup.isNotEmpty() && albumLookup.first().id != 0L) {
             val album = albumLookup.first()
             lidarrClient.monitorAlbums(LidarrMonitorRequest(listOf(album.id)))
             album.id

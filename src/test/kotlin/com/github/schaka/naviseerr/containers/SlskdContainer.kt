@@ -33,6 +33,7 @@ class SlskdContainer(musicLibrary: Path, localRuntime: Path, network: Network? =
         withFileSystemBind(musicLibrary.toString(), "/music", BindMode.READ_ONLY)
         withFileSystemBind(musicLibrary.resolve("temp-downloads").toString(), "/downloads", BindMode.READ_WRITE)
         withFileSystemBind(slskdDir.toString(), "/app", BindMode.READ_WRITE)
+        withCreateContainerCmdModifier { it.withUser("1000:1000") }
         waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
         network?.let { withNetwork(it).withNetworkAliases("slskd") }
     }

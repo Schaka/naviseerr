@@ -46,6 +46,7 @@ class LocalDevEnvironment {
         lidarrSetup.setupRootFolder()
         lidarrSetup.setupAuth()
         lidarrSetup.installTubifarry()
+        lidarrSetup.setupSoulseekDelayProfile()
         lidarrSetup.setupSlskdDownloadClient("slskd", "naviseerr-local-dev")
         lidarrSetup.setupSlskdIndexer("slskd", "naviseerr-local-dev")
 
