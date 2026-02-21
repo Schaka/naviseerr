@@ -1,11 +1,11 @@
 package com.github.schaka.naviseerr.lidarr
 
-import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.stereotype.Service
 
 @Service
-class LidarrConfigCache(private val lidarrClient: LidarrClient) {
+class LidarrConfigCache(private val lidarrClient: LidarrClient) : SmartInitializingSingleton {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -17,8 +17,7 @@ class LidarrConfigCache(private val lidarrClient: LidarrClient) {
 
     private lateinit var config: LidarrConfig
 
-    @PostConstruct
-    fun init() {
+    override fun afterSingletonsInstantiated() {
         val rootFolders = lidarrClient.getRootFolders()
         val qualityProfiles = lidarrClient.getQualityProfiles()
         val metadataProfiles = lidarrClient.getMetadataProfiles()

@@ -93,6 +93,51 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Start Leyden training containers
+        run: |
+          mkdir -p /tmp/music /tmp/lidarr-leyden/config
+
+          cat > /tmp/lidarr-leyden/config/config.xml << 'EOF'
+          <Config>
+            <LogLevel>info</LogLevel>
+            <UpdateMechanism>Docker</UpdateMechanism>
+            <BindAddress>*</BindAddress>
+            <Port>8686</Port>
+            <EnableSsl>False</EnableSsl>
+            <ApiKey>leyden-training-api-key</ApiKey>
+            <AuthenticationMethod>None</AuthenticationMethod>
+            <AuthenticationRequired>Disabled</AuthenticationRequired>
+          </Config>
+          EOF
+
+          docker network create naviseerr-leyden
+
+          docker run -d \
+            --name postgres-leyden \
+            --network naviseerr-leyden \
+            -e POSTGRES_DB=naviseerr \
+            -e POSTGRES_USER=naviseerr \
+            -e POSTGRES_PASSWORD=naviseerr \
+            postgres:17
+
+          docker run -d \
+            --name lidarr-leyden \
+            --network naviseerr-leyden \
+            -p 8686:8686 \
+            -e PUID=1000 \
+            -e PGID=1000 \
+            -v /tmp/lidarr-leyden/config:/config \
+            -v /tmp/music:/music \
+            lscr.io/linuxserver/lidarr:nightly
+
+      - name: Wait for Leyden training containers to be ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until docker exec postgres-leyden pg_isready -U naviseerr; do sleep 2; done
+
+          echo "Waiting for Lidarr..."
+          until curl -sf -o /dev/null http://localhost:8686/api/v1/system/status -H "X-Api-Key: leyden-training-api-key"; do sleep 5; done
+
       - name: Build JVM OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/amd64
         env:
@@ -101,6 +146,7 @@ jobs:
           REPOSITORY_OWNER: ${{ github.repository_owner }}
           LC_ALL: "en_US.UTF-8"
           TARGET_PLATFORM: "amd64"
+          BUILDER_NETWORK: "naviseerr-leyden"
 
   build-jvm-aarch64:
     needs: [ run-test-suite ]
@@ -125,6 +171,51 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Start Leyden training containers
+        run: |
+          mkdir -p /tmp/music /tmp/lidarr-leyden/config
+
+          cat > /tmp/lidarr-leyden/config/config.xml << 'EOF'
+          <Config>
+            <LogLevel>info</LogLevel>
+            <UpdateMechanism>Docker</UpdateMechanism>
+            <BindAddress>*</BindAddress>
+            <Port>8686</Port>
+            <EnableSsl>False</EnableSsl>
+            <ApiKey>leyden-training-api-key</ApiKey>
+            <AuthenticationMethod>None</AuthenticationMethod>
+            <AuthenticationRequired>Disabled</AuthenticationRequired>
+          </Config>
+          EOF
+
+          docker network create naviseerr-leyden
+
+          docker run -d \
+            --name postgres-leyden \
+            --network naviseerr-leyden \
+            -e POSTGRES_DB=naviseerr \
+            -e POSTGRES_USER=naviseerr \
+            -e POSTGRES_PASSWORD=naviseerr \
+            postgres:17
+
+          docker run -d \
+            --name lidarr-leyden \
+            --network naviseerr-leyden \
+            -p 8686:8686 \
+            -e PUID=1000 \
+            -e PGID=1000 \
+            -v /tmp/lidarr-leyden/config:/config \
+            -v /tmp/music:/music \
+            lscr.io/linuxserver/lidarr:nightly
+
+      - name: Wait for Leyden training containers to be ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until docker exec postgres-leyden pg_isready -U naviseerr; do sleep 2; done
+
+          echo "Waiting for Lidarr..."
+          until curl -sf -o /dev/null http://localhost:8686/api/v1/system/status -H "X-Api-Key: leyden-training-api-key"; do sleep 5; done
+
       - name: Build JVM ARM64 OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/arm64
         env:
@@ -133,6 +224,7 @@ jobs:
           REPOSITORY_OWNER: ${{ github.repository_owner }}
           LC_ALL: "en_US.UTF-8"
           TARGET_PLATFORM: "arm64"
+          BUILDER_NETWORK: "naviseerr-leyden"
 
   combine-images:
     runs-on: ubuntu-latest
