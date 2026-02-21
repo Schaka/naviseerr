@@ -1,6 +1,7 @@
-package com.github.schaka.naviseerr.lidarr.setup
+package com.github.schaka.naviseerr
 
 import com.github.schaka.naviseerr.lidarr.LidarrProperties
+import com.github.schaka.naviseerr.lidarr.setup.LidarrSetup
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Configuration
