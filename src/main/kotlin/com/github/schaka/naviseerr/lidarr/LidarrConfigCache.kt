@@ -1,5 +1,7 @@
 package com.github.schaka.naviseerr.lidarr
 
+import com.github.schaka.naviseerr.lidarr.dto.LidarrMetadataProfile
+import com.github.schaka.naviseerr.lidarr.dto.LidarrQualityProfile
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.stereotype.Service
@@ -14,8 +16,8 @@ class LidarrConfigCache(
 
     data class LidarrConfig(
         val rootFolderPath: String,
-        val qualityProfileId: Int,
-        val metadataProfileId: Int
+        val qualityProfile: LidarrQualityProfile,
+        val metadataProfile: LidarrMetadataProfile
     )
 
     private lateinit var config: LidarrConfig
@@ -27,13 +29,17 @@ class LidarrConfigCache(
 
         config = LidarrConfig(
             rootFolderPath = rootFolders.first().path,
-            qualityProfileId = (qualityProfiles.firstOrNull{ it.id == lidarrProperties.qualityProfileId } ?: qualityProfiles.first()).id,
-            metadataProfileId = (metadataProfiles.firstOrNull{ it.id == lidarrProperties.metadataProfileId } ?: metadataProfiles.first()).id,
+            qualityProfile = qualityProfiles.firstOrNull{ it.id == lidarrProperties.qualityProfileId } ?: qualityProfiles.first(),
+            metadataProfile = metadataProfiles.firstOrNull{ it.id == lidarrProperties.metadataProfileId } ?: metadataProfiles.first(),
         )
 
         log.info("Lidarr config loaded: rootFolder={}, qualityProfile={}, metadataProfile={}",
-            config.rootFolderPath, config.qualityProfileId, config.metadataProfileId)
+            config.rootFolderPath, config.qualityProfile, config.metadataProfile)
     }
 
     fun getConfig(): LidarrConfig = config
+
+    fun allowedReleaseTypes(): List<String> {
+        return getConfig().metadataProfile.primarilyAlbumTypes.filter { it.allowed }.map { it.albumType.name }
+    }
 }

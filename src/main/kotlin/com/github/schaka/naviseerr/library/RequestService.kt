@@ -1,9 +1,6 @@
 package com.github.schaka.naviseerr.library
 
 import com.github.schaka.naviseerr.db.library.*
-import com.github.schaka.naviseerr.db.library.MediaRequests.albumTitle
-import com.github.schaka.naviseerr.db.library.MediaRequests.lidarrAlbumId
-import com.github.schaka.naviseerr.db.library.MediaRequests.lidarrArtistId
 import com.github.schaka.naviseerr.db.library.enums.MediaStatus
 import com.github.schaka.naviseerr.db.user.NaviseerrUser
 import com.github.schaka.naviseerr.lidarr.LidarrClient
@@ -50,8 +47,8 @@ class RequestService(
                 LidarrAddArtistRequest(
                     foreignArtistId = mbArtistId,
                     artistName = artistName,
-                    qualityProfileId = config.qualityProfileId,
-                    metadataProfileId = config.metadataProfileId,
+                    qualityProfileId = config.qualityProfile.id,
+                    metadataProfileId = config.metadataProfile.id,
                     rootFolderPath = config.rootFolderPath,
                 )
             )
@@ -106,8 +103,8 @@ class RequestService(
                 LidarrAddArtistRequest(
                     foreignArtistId = mbArtistId,
                     artistName = artistName,
-                    qualityProfileId = config.qualityProfileId,
-                    metadataProfileId = config.metadataProfileId,
+                    qualityProfileId = config.qualityProfile.id,
+                    metadataProfileId = config.metadataProfile.id,
                     rootFolderPath = config.rootFolderPath,
                     addOptions = AddArtistOptions("none", false)
                 )
@@ -130,7 +127,7 @@ class RequestService(
             albumLookup.copy(monitored = true)
         } else {
             // FIXME: Confirm that this case can actually happen when a new album comes out and Lidarr doesn't update metadata fast enough
-            // for now it covers the case where singles are never automatically added and we force
+            // for now it covers the case where non-allowed types are Requested and we have to force it
             val added = lidarrClient.addAlbum(
                 LidarrAddAlbumRequest(
                     foreignAlbumId = mbAlbumId,
@@ -140,7 +137,7 @@ class RequestService(
                 )
             )
             log.info("Added album '{}' to Lidarr with id {}", albumTitle, added.id)
-            if (albumLookup?.albumType == "Single") {
+            if (albumLookup?.albumType in lidarrConfigCache.allowedReleaseTypes()) {
                 lidarrClient.searchAlbums(LidarrSearchCommand("AlbumSearch", albumIds = listOf(added.id)))
             }
             added.copy(monitored = true)
@@ -210,7 +207,7 @@ class RequestService(
         val albumLookup = lidarrClient.lookupAlbum("lidarr:$mbAlbumId")
 
         // single type can be found but, but usually isn't added by Lidarr automatically, so we need to force add it in the next step
-        if (!artistJustAdded || secondsWaited >= 300 || albumLookup.firstOrNull()?.albumType == "Single") {
+        if (!artistJustAdded || secondsWaited >= 300 || albumLookup.firstOrNull()?.albumType in lidarrConfigCache.allowedReleaseTypes()) {
             return albumLookup.firstOrNull()
         }
 

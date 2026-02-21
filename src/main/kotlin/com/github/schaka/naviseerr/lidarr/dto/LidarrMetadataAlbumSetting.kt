@@ -5,10 +5,8 @@ import com.fasterxml.jackson.annotation.JsonSetter
 import com.fasterxml.jackson.annotation.Nulls
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class LidarrMetadataProfile(
-    val id: Int,
-    val name: String,
+data class LidarrMetadataAlbumSetting(
+    val albumType: LidarrAlbumType,
+    val allowed: Boolean = false,
 
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
-    val primarilyAlbumTypes: List<LidarrMetadataAlbumSetting>,
 )
