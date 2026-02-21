@@ -4,8 +4,9 @@ data class LidarrAddAlbumRequest(
     val foreignAlbumId: String,
     val title: String,
     val artistId: Long,
+    val artist: LidarrArtist,
     val monitored: Boolean = true,
-    val addOptions: AddAlbumOptions = AddAlbumOptions()
+    val addOptions: AddAlbumOptions = AddAlbumOptions(),
 )
 
 data class AddAlbumOptions(

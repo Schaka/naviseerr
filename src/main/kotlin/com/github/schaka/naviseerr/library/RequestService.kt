@@ -3,6 +3,7 @@ package com.github.schaka.naviseerr.library
 import com.github.schaka.naviseerr.db.library.*
 import com.github.schaka.naviseerr.db.library.MediaRequests.albumTitle
 import com.github.schaka.naviseerr.db.library.MediaRequests.lidarrAlbumId
+import com.github.schaka.naviseerr.db.library.MediaRequests.lidarrArtistId
 import com.github.schaka.naviseerr.db.library.enums.MediaStatus
 import com.github.schaka.naviseerr.db.user.NaviseerrUser
 import com.github.schaka.naviseerr.lidarr.LidarrClient
@@ -42,7 +43,7 @@ class RequestService(
         val config = lidarrConfigCache.getConfig()
 
         if (existingArtist == null || lidarrLookup.isEmpty() || lidarrLookup.first().id == 0L) {
-            val existingRequest = mediaRequestService.findActiveByMusicbrainzArtistId(user.id, mbArtistId)
+            val existingRequest = mediaRequestService.findActiveByMusicbrainzArtistId(mbArtistId)
             if (existingRequest != null) return existingRequest
 
             val added = lidarrClient.addArtist(
@@ -91,15 +92,15 @@ class RequestService(
             return monitorAndSearchAlbum(existingAlbum, albumTitle, user, mbArtistId, mbAlbumId, artistName)
         }
 
-        val existingRequest = mediaRequestService.findActiveByMusicbrainzAlbumId(user.id, mbAlbumId)
+        val existingRequest = mediaRequestService.findActiveByMusicbrainzAlbumId(mbAlbumId)
         if (existingRequest != null) return existingRequest
 
         val config = lidarrConfigCache.getConfig()
         val artistLookup = lidarrClient.lookupArtist("lidarr:$mbArtistId")
         var artistJustAdded = false
 
-        val lidarrArtistId = if (artistLookup.isNotEmpty() && artistLookup.first().id != 0L) {
-            artistLookup.first().id
+        val lidarrArtist = if (artistLookup.isNotEmpty() && artistLookup.first().id != 0L) {
+            artistLookup.first()
         } else {
             val added = lidarrClient.addArtist(
                 LidarrAddArtistRequest(
@@ -115,7 +116,7 @@ class RequestService(
             log.info("Added artist '{}' to Lidarr with id {}", artistName, added.id)
             artistJustAdded = true
             libraryArtistService.upsertFromLidarr(added, false, false)
-            added.id
+            added
         }
 
         val albumLookup = lookupAlbumWithWaitCondition(mbAlbumId, artistJustAdded)
@@ -129,14 +130,19 @@ class RequestService(
             albumLookup.copy(monitored = true)
         } else {
             // FIXME: Confirm that this case can actually happen when a new album comes out and Lidarr doesn't update metadata fast enough
+            // for now it covers the case where singles are never automatically added and we force
             val added = lidarrClient.addAlbum(
                 LidarrAddAlbumRequest(
                     foreignAlbumId = mbAlbumId,
                     title = albumTitle,
-                    artistId = lidarrArtistId,
+                    artistId = lidarrArtist.id,
+                    artist = lidarrArtist
                 )
             )
             log.info("Added album '{}' to Lidarr with id {}", albumTitle, added.id)
+            if (albumLookup?.albumType == "Single") {
+                lidarrClient.searchAlbums(LidarrSearchCommand("AlbumSearch", albumIds = listOf(added.id)))
+            }
             added.copy(monitored = true)
         }
 
@@ -144,7 +150,7 @@ class RequestService(
 
         return mediaRequestService.create(
             user.id, mbArtistId, mbAlbumId, artistName, albumTitle,
-            lidarrArtistId = lidarrArtistId,
+            lidarrArtistId = lidarrArtist.id,
             lidarrAlbumId = lidarrAlbum.id
         )
     }
@@ -203,7 +209,8 @@ class RequestService(
     private fun lookupAlbumWithWaitCondition(mbAlbumId: String, artistJustAdded: Boolean, secondsWaited: Int = 0): LidarrAlbum? {
         val albumLookup = lidarrClient.lookupAlbum("lidarr:$mbAlbumId")
 
-        if (!artistJustAdded || secondsWaited >= 300) {
+        // single type can be found but, but usually isn't added by Lidarr automatically, so we need to force add it in the next step
+        if (!artistJustAdded || secondsWaited >= 300 || albumLookup.firstOrNull()?.albumType == "Single") {
             return albumLookup.firstOrNull()
         }
 

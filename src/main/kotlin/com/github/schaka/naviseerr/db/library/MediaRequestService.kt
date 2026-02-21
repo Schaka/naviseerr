@@ -55,10 +55,9 @@ class MediaRequestService {
             .map(::mapRow)
     }
 
-    fun findActiveByMusicbrainzArtistId(userId: UUID, mbArtistId: String): MediaRequest? = transaction {
+    fun findActiveByMusicbrainzArtistId(mbArtistId: String): MediaRequest? = transaction {
         MediaRequests.selectAll()
             .where {
-                (MediaRequests.userId eq userId) and
                     (MediaRequests.musicbrainzArtistId eq mbArtistId) and
                     (MediaRequests.status eq RequestStatus.REQUESTED.name)
             }
@@ -66,10 +65,9 @@ class MediaRequestService {
             ?.let(::mapRow)
     }
 
-    fun findActiveByMusicbrainzAlbumId(userId: UUID, mbAlbumId: String): MediaRequest? = transaction {
+    fun findActiveByMusicbrainzAlbumId(mbAlbumId: String): MediaRequest? = transaction {
         MediaRequests.selectAll()
             .where {
-                (MediaRequests.userId eq userId) and
                     (MediaRequests.musicbrainzAlbumId eq mbAlbumId) and
                     (MediaRequests.status eq RequestStatus.REQUESTED.name)
             }
@@ -95,24 +93,6 @@ class MediaRequestService {
             it[status] = RequestStatus.AVAILABLE.name
             it[updatedAt] = Instant.now()
         }
-    }
-
-    fun updateStatus(
-        requestId: UUID,
-        status: RequestStatus,
-        lidarrArtistId: Long? = null,
-        lidarrAlbumId: Long? = null
-    ): MediaRequest = transaction {
-        MediaRequests.update({ MediaRequests.id eq requestId }) {
-            it[this.status] = status.name
-            it[updatedAt] = Instant.now()
-            if (lidarrArtistId != null) it[this.lidarrArtistId] = lidarrArtistId
-            if (lidarrAlbumId != null) it[this.lidarrAlbumId] = lidarrAlbumId
-        }
-        MediaRequests.selectAll()
-            .where { MediaRequests.id eq requestId }
-            .single()
-            .let(::mapRow)
     }
 
     private fun mapRow(row: ResultRow) = MediaRequest(
