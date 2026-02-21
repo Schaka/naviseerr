@@ -218,7 +218,10 @@ tasks.withType<BootBuildImage> {
         "BPE_BPL_JVM_THREAD_COUNT" to "15",
         "BPE_BPL_JVM_HEAD_ROOM" to "1",
         "BPE_BPL_JVM_LOADED_CLASS_COUNT" to "15000",
-        "TRAINING_RUN_JAVA_TOOL_OPTIONS" to "-XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -Dspring.profiles.active=leyden",
+        "TRAINING_RUN_JAVA_TOOL_OPTIONS" to buildString {
+            append("-XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -Dspring.profiles.active=leyden")
+            System.getenv("LIDARR_API_KEY")?.takeIf { it.isNotBlank() }?.let { append(" -Dlidarr.api-key=$it") }
+        },
         "BPE_SPRING_CONFIG_ADDITIONAL_LOCATION" to "optional:/config/application.yml",
         "BPE_PREPEND_JAVA_TOOL_OPTIONS" to "-XX:+UseSerialGC -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders",
         "BPE_DELIM_JAVA_TOOL_OPTIONS" to " ",

@@ -95,27 +95,7 @@ jobs:
 
       - name: Start Leyden training containers
         run: |
-          mkdir -p /tmp/music /tmp/lidarr-leyden/config
-
-          cat > /tmp/lidarr-leyden/config/config.xml << 'EOF'
-          <Config>
-            <BindAddress>*</BindAddress>
-            <Port>8686</Port>
-            <SslPort>6868</SslPort>
-            <EnableSsl>False</EnableSsl>
-            <LaunchBrowser>True</LaunchBrowser>
-            <ApiKey>leyden-training-api-key</ApiKey>
-            <AuthenticationMethod>None</AuthenticationMethod>
-            <AuthenticationRequired>Disabled</AuthenticationRequired>
-            <Branch>nightly</Branch>
-            <LogLevel>debug</LogLevel>
-            <SslCertPath></SslCertPath>
-            <SslCertPassword></SslCertPassword>
-            <UrlBase></UrlBase>
-            <InstanceName>Lidarr</InstanceName>
-            <UpdateMechanism>Docker</UpdateMechanism>
-          </Config>
-          EOF
+          mkdir -p /tmp/music
 
           docker network create naviseerr-leyden
 
@@ -133,7 +113,6 @@ jobs:
             -p 8686:8686 \
             -e PUID=$(id -u) \
             -e PGID=$(id -g) \
-            -v /tmp/lidarr-leyden/config:/config \
             -v /tmp/music:/music \
             lscr.io/linuxserver/lidarr:nightly
 
@@ -145,6 +124,10 @@ jobs:
           echo "Waiting for Lidarr..."
           until curl -sf -o /dev/null http://localhost:8686/ping; do sleep 5; done
 
+          docker cp lidarr-leyden:/config/config.xml /tmp/lidarr-config.xml
+          LIDARR_API_KEY=$(sed -n 's/.*<ApiKey>\([^<]*\)<\/ApiKey>.*/\1/p' /tmp/lidarr-config.xml)
+          echo "LIDARR_API_KEY=$LIDARR_API_KEY" >> $GITHUB_ENV
+
       - name: Build JVM OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/amd64
         env:
@@ -154,6 +137,7 @@ jobs:
           LC_ALL: "en_US.UTF-8"
           TARGET_PLATFORM: "amd64"
           BUILDER_NETWORK: "naviseerr-leyden"
+          LIDARR_API_KEY: ${{ env.LIDARR_API_KEY }}
 
   build-jvm-aarch64:
     needs: [ run-test-suite ]
@@ -180,27 +164,7 @@ jobs:
 
       - name: Start Leyden training containers
         run: |
-          mkdir -p /tmp/music /tmp/lidarr-leyden/config
-
-          cat > /tmp/lidarr-leyden/config/config.xml << 'EOF'
-          <Config>
-            <BindAddress>*</BindAddress>
-            <Port>8686</Port>
-            <SslPort>6868</SslPort>
-            <EnableSsl>False</EnableSsl>
-            <LaunchBrowser>True</LaunchBrowser>
-            <ApiKey>leyden-training-api-key</ApiKey>
-            <AuthenticationMethod>None</AuthenticationMethod>
-            <AuthenticationRequired>Disabled</AuthenticationRequired>
-            <Branch>nightly</Branch>
-            <LogLevel>debug</LogLevel>
-            <SslCertPath></SslCertPath>
-            <SslCertPassword></SslCertPassword>
-            <UrlBase></UrlBase>
-            <InstanceName>Lidarr</InstanceName>
-            <UpdateMechanism>Docker</UpdateMechanism>
-          </Config>
-          EOF
+          mkdir -p /tmp/music
 
           docker network create naviseerr-leyden
 
@@ -218,7 +182,6 @@ jobs:
             -p 8686:8686 \
             -e PUID=$(id -u) \
             -e PGID=$(id -g) \
-            -v /tmp/lidarr-leyden/config:/config \
             -v /tmp/music:/music \
             lscr.io/linuxserver/lidarr:nightly
 
@@ -230,6 +193,10 @@ jobs:
           echo "Waiting for Lidarr..."
           until curl -sf -o /dev/null http://localhost:8686/ping; do sleep 5; done
 
+          docker cp lidarr-leyden:/config/config.xml /tmp/lidarr-config.xml
+          LIDARR_API_KEY=$(sed -n 's/.*<ApiKey>\([^<]*\)<\/ApiKey>.*/\1/p' /tmp/lidarr-config.xml)
+          echo "LIDARR_API_KEY=$LIDARR_API_KEY" >> $GITHUB_ENV
+
       - name: Build JVM ARM64 OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/arm64
         env:
@@ -239,6 +206,7 @@ jobs:
           LC_ALL: "en_US.UTF-8"
           TARGET_PLATFORM: "arm64"
           BUILDER_NETWORK: "naviseerr-leyden"
+          LIDARR_API_KEY: ${{ env.LIDARR_API_KEY }}
 
   combine-images:
     runs-on: ubuntu-latest
