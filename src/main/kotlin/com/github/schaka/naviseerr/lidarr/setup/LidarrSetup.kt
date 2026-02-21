@@ -29,7 +29,7 @@ class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
                         "name" to "music",
                         "path" to "/music",
                         "defaultMetadataProfileId" to "1",
-                        "defaultQualityProfileId" to "1",
+                        "defaultQualityProfileId" to "2",
                         "defaultMonitorOption" to "all",
                         "defaultNewItemMonitorOption" to "all",
                     )

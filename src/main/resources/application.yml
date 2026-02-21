@@ -47,6 +47,8 @@ listenbrainz:
 lidarr:
   url: "http://192.168.1.1:8686"
   api-key: "your-api-key"
+  metadata-profile-id: 1 # Standard profile
+  quality-profile-id: 2 # 1 is Any, 2 is Lossless by default, set your custom ID if you built your own profile
 
 musicbrainz:
   url: "https://musicbrainz.org/ws/2"

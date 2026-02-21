@@ -6,5 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 data class LidarrProperties(
     val url: String,
     val apiKey: String,
-    val isDocker : Boolean = true,
+    val qualityProfileId: Int = 2,
+    val metadataProfileId: Int = 1,
 )

@@ -5,7 +5,10 @@ import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.stereotype.Service
 
 @Service
-class LidarrConfigCache(private val lidarrClient: LidarrClient) : SmartInitializingSingleton {
+class LidarrConfigCache(
+    private val lidarrClient: LidarrClient,
+    private val lidarrProperties: LidarrProperties
+) : SmartInitializingSingleton {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -24,8 +27,8 @@ class LidarrConfigCache(private val lidarrClient: LidarrClient) : SmartInitializ
 
         config = LidarrConfig(
             rootFolderPath = rootFolders.first().path,
-            qualityProfileId = qualityProfiles.first().id,
-            metadataProfileId = metadataProfiles.first().id
+            qualityProfileId = (qualityProfiles.firstOrNull{ it.id == lidarrProperties.qualityProfileId } ?: qualityProfiles.first()).id,
+            metadataProfileId = (metadataProfiles.firstOrNull{ it.id == lidarrProperties.metadataProfileId } ?: metadataProfiles.first()).id,
         )
 
         log.info("Lidarr config loaded: rootFolder={}, qualityProfile={}, metadataProfile={}",
