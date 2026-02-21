@@ -107,8 +107,7 @@ let downloadsTimer: ReturnType<typeof setInterval> | null = null
 
 function statusColor(status: string): string {
   switch (status) {
-    case 'PENDING': return 'grey'
-    case 'PROCESSING': return 'info'
+    case 'REQUESTED': return 'info'
     case 'AVAILABLE': return 'positive'
     case 'FAILED': return 'negative'
     default: return 'grey'

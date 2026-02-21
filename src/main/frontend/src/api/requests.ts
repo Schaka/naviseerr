@@ -4,7 +4,7 @@ export interface MediaRequestDto {
   id: string
   artistName: string
   albumTitle?: string
-  status: 'PENDING' | 'PROCESSING' | 'AVAILABLE' | 'FAILED'
+  status: 'REQUESTED' | 'AVAILABLE' | 'FAILED'
   musicbrainzArtistId: string
   musicbrainzAlbumId?: string
   createdAt: string

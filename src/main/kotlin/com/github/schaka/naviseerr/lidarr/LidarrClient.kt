@@ -45,6 +45,12 @@ interface LidarrClient {
     @RequestLine("POST /command")
     fun import(import: ImportCommand)
 
+    @RequestLine("POST /command")
+    fun searchAlbums(command: LidarrSearchCommand)
+
+    @RequestLine("PUT /artist/{id}")
+    fun updateArtist(@Param("id") id: Long, artist: LidarrArtist): LidarrArtist
+
     @RequestLine("GET /qualitydefinition")
     fun getQualityDefinitions(): List<QualityDefinition>
 

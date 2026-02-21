@@ -24,6 +24,7 @@ fun createLocalDevNetwork(): Network {
             dockerClient.removeNetworkCmd(network.id).exec()
         }
 
+    Thread.sleep(5000)
     return Network.builder()
         .createNetworkCmdModifier { cmd -> cmd.withName(NETWORK_NAME) }
         .build()

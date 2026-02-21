@@ -20,7 +20,9 @@ class MediaRequestService {
         musicbrainzArtistId: String,
         musicbrainzAlbumId: String?,
         artistName: String,
-        albumTitle: String?
+        albumTitle: String?,
+        lidarrArtistId: Long? = null,
+        lidarrAlbumId: Long? = null
     ): MediaRequest = transaction {
         val id = UUID.randomUUID()
         val now = Instant.now()
@@ -31,11 +33,13 @@ class MediaRequestService {
             it[this.musicbrainzAlbumId] = musicbrainzAlbumId
             it[this.artistName] = artistName
             it[this.albumTitle] = albumTitle
-            it[status] = RequestStatus.PENDING.name
+            it[status] = RequestStatus.REQUESTED.name
             it[createdAt] = now
             it[updatedAt] = now
+            if (lidarrArtistId != null) it[this.lidarrArtistId] = lidarrArtistId
+            if (lidarrAlbumId != null) it[this.lidarrAlbumId] = lidarrAlbumId
         }
-        MediaRequest(id, userId, null, null, musicbrainzArtistId, musicbrainzAlbumId, artistName, albumTitle, RequestStatus.PENDING, null, null, now, now)
+        MediaRequest(id, userId, null, null, musicbrainzArtistId, musicbrainzAlbumId, artistName, albumTitle, RequestStatus.REQUESTED, lidarrArtistId, lidarrAlbumId, now, now)
     }
 
     fun findByUser(userId: UUID): List<MediaRequest> = transaction {
@@ -51,26 +55,46 @@ class MediaRequestService {
             .map(::mapRow)
     }
 
-    fun findPendingByMusicbrainzArtistId(userId: UUID, mbArtistId: String): MediaRequest? = transaction {
+    fun findActiveByMusicbrainzArtistId(userId: UUID, mbArtistId: String): MediaRequest? = transaction {
         MediaRequests.selectAll()
             .where {
                 (MediaRequests.userId eq userId) and
                     (MediaRequests.musicbrainzArtistId eq mbArtistId) and
-                    (MediaRequests.status eq RequestStatus.PENDING.name)
+                    (MediaRequests.status eq RequestStatus.REQUESTED.name)
             }
             .singleOrNull()
             ?.let(::mapRow)
     }
 
-    fun findPendingByMusicbrainzAlbumId(userId: UUID, mbAlbumId: String): MediaRequest? = transaction {
+    fun findActiveByMusicbrainzAlbumId(userId: UUID, mbAlbumId: String): MediaRequest? = transaction {
         MediaRequests.selectAll()
             .where {
                 (MediaRequests.userId eq userId) and
                     (MediaRequests.musicbrainzAlbumId eq mbAlbumId) and
-                    (MediaRequests.status eq RequestStatus.PENDING.name)
+                    (MediaRequests.status eq RequestStatus.REQUESTED.name)
             }
             .singleOrNull()
             ?.let(::mapRow)
+    }
+
+    fun updateAllActiveToAvailableByLidarrAlbumId(lidarrAlbumId: Long): Unit = transaction {
+        MediaRequests.update({
+            (MediaRequests.lidarrAlbumId eq lidarrAlbumId) and
+                (MediaRequests.status eq RequestStatus.REQUESTED.name)
+        }) {
+            it[status] = RequestStatus.AVAILABLE.name
+            it[updatedAt] = Instant.now()
+        }
+    }
+
+    fun updateAllActiveToAvailableByLidarrArtistId(lidarrArtistId: Long): Unit = transaction {
+        MediaRequests.update({
+            (MediaRequests.lidarrArtistId eq lidarrArtistId) and
+                (MediaRequests.status eq RequestStatus.REQUESTED.name)
+        }) {
+            it[status] = RequestStatus.AVAILABLE.name
+            it[updatedAt] = Instant.now()
+        }
     }
 
     fun updateStatus(

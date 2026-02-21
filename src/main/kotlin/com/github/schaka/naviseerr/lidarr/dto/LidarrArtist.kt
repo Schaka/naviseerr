@@ -12,6 +12,7 @@ data class LidarrArtist(
     val mbId: String?, // musicbrainz
     val foreignArtistId: String, // musicbrainz
     val path: String?,
+    val monitored: Boolean = false,
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     val albums: MutableList<LidarrAlbum> = ArrayList(),

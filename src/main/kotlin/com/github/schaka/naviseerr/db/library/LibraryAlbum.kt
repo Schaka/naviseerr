@@ -14,5 +14,6 @@ data class LibraryAlbum(
     val albumType: String?,
     val status: MediaStatus,
     val source: MediaSource,
-    val syncedAt: Instant
+    val syncedAt: Instant,
+    val lastSearchedAt: Instant?
 )

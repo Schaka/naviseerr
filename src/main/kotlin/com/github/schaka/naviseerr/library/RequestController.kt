@@ -20,12 +20,8 @@ class RequestController(
         @AuthenticationPrincipal principal: NaviseerrUser,
         @RequestBody request: ArtistRequestDto
     ): ResponseEntity<MediaRequestDto> {
-        return try {
-            val result = requestService.requestArtist(principal, request.musicbrainzId, request.name)
-            ResponseEntity.ok(result.toDto())
-        } catch (e: MediaAlreadyAvailableException) {
-            ResponseEntity.status(HttpStatus.CONFLICT).build()
-        }
+        val result = requestService.requestArtist(principal, request.musicbrainzId, request.name)
+        return ResponseEntity.ok(result.toDto())
     }
 
     @PostMapping("/album")
@@ -33,18 +29,14 @@ class RequestController(
         @AuthenticationPrincipal principal: NaviseerrUser,
         @RequestBody request: AlbumRequestDto
     ): ResponseEntity<MediaRequestDto> {
-        return try {
-            val result = requestService.requestAlbum(
-                principal,
-                request.musicbrainzArtistId,
-                request.musicbrainzAlbumId,
-                request.artistName,
-                request.albumTitle
-            )
-            ResponseEntity.ok(result.toDto())
-        } catch (e: MediaAlreadyAvailableException) {
-            ResponseEntity.status(HttpStatus.CONFLICT).build()
-        }
+        val result = requestService.requestAlbum(
+            principal,
+            request.musicbrainzArtistId,
+            request.musicbrainzAlbumId,
+            request.artistName,
+            request.albumTitle
+        )
+        return ResponseEntity.ok(result.toDto())
     }
 
     @GetMapping
@@ -55,5 +47,15 @@ class RequestController(
     @GetMapping("/all")
     fun getAllRequests(): ResponseEntity<List<MediaRequestDto>> {
         return ResponseEntity.ok(mediaRequestService.findAll().map { it.toDto() })
+    }
+
+    @ExceptionHandler
+    fun handleException(ex: MediaAlreadyAvailableException): ResponseEntity<MediaRequestDto> {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build()
+    }
+
+    @ExceptionHandler
+    fun handleException(ex: SearchCooldownException): ResponseEntity<MediaRequestDto> {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build()
     }
 }

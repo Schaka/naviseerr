@@ -13,5 +13,6 @@ data class LibraryArtist(
     val cleanName: String?,
     val status: MediaStatus,
     val source: MediaSource,
-    val syncedAt: Instant
+    val syncedAt: Instant,
+    val lastSearchedAt: Instant?
 )

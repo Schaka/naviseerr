@@ -77,7 +77,7 @@
                 </q-chip>
                 <q-btn
                   v-else
-                  label="Request"
+                  :label="artist.status === 'MONITORED' ? 'Search Again' : 'Request'"
                   color="primary"
                   dense
                   no-caps
@@ -118,7 +118,7 @@
                 </q-chip>
                 <q-btn
                   v-else
-                  label="Request"
+                  :label="album.status === 'MONITORED' ? 'Search Again' : 'Request'"
                   color="primary"
                   dense
                   no-caps
@@ -191,6 +191,8 @@ async function requestArtist(artist: ArtistSearchResult) {
     const status = (error as { response?: { status?: number } })?.response?.status
     if (status === 409) {
       $q.notify({ type: 'warning', message: 'Already in library' })
+    } else if (status === 429) {
+      $q.notify({ type: 'warning', message: 'Search already triggered recently, please wait before trying again' })
     } else {
       $q.notify({ type: 'negative', message: 'Request failed' })
     }
@@ -214,6 +216,8 @@ async function requestAlbum(album: AlbumSearchResult) {
     const status = (error as { response?: { status?: number } })?.response?.status
     if (status === 409) {
       $q.notify({ type: 'warning', message: 'Already in library' })
+    } else if (status === 429) {
+      $q.notify({ type: 'warning', message: 'Search already triggered recently, please wait before trying again' })
     } else {
       $q.notify({ type: 'negative', message: 'Request failed' })
     }

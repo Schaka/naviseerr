@@ -2,6 +2,8 @@ package com.github.schaka.naviseerr.library
 
 import com.github.schaka.naviseerr.db.library.LibraryAlbumService
 import com.github.schaka.naviseerr.db.library.LibraryArtistService
+import com.github.schaka.naviseerr.db.library.MediaRequestService
+import com.github.schaka.naviseerr.db.library.enums.MediaStatus
 import com.github.schaka.naviseerr.lidarr.LidarrClient
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -13,6 +15,7 @@ class LibrarySyncService(
     private val lidarrClient: LidarrClient,
     private val libraryArtistService: LibraryArtistService,
     private val libraryAlbumService: LibraryAlbumService,
+    private val mediaRequestService: MediaRequestService,
 ) {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -26,10 +29,26 @@ class LibrarySyncService(
             val albumsByArtist = allAlbums.groupBy { it.artistId }
 
             artists.forEach { artist ->
-                val libraryArtist = libraryArtistService.upsertFromLidarr(artist)
+                // First upsert to ensure the artist record exists and get its DB ID
+                val libraryArtist = libraryArtistService.upsertFromLidarr(artist, false)
+
                 val albums = albumsByArtist[artist.id] ?: emptyList()
-                albums.forEach { album ->
+                val savedAlbums = albums.map { album ->
                     libraryAlbumService.upsertFromLidarr(libraryArtist.id, album)
+                }
+
+                // Re-upsert artist with correct availability computed from albums
+                val allAlbumsAvailable = savedAlbums.isNotEmpty() && savedAlbums.all { it.status == MediaStatus.AVAILABLE }
+                val finalArtist = libraryArtistService.upsertFromLidarr(artist, allAlbumsAvailable)
+
+                savedAlbums.filter { it.status == MediaStatus.AVAILABLE }.forEach { album ->
+                    if (album.lidarrId != null) {
+                        mediaRequestService.updateAllActiveToAvailableByLidarrAlbumId(album.lidarrId)
+                    }
+                }
+
+                if (finalArtist.status == MediaStatus.AVAILABLE && artist.id != 0L) {
+                    mediaRequestService.updateAllActiveToAvailableByLidarrArtistId(artist.id)
                 }
             }
 

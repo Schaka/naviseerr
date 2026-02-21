@@ -39,7 +39,8 @@ CREATE TABLE library_artists (
     clean_name VARCHAR(512),
     status VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN',
     source VARCHAR(32) NOT NULL DEFAULT 'LIDARR',
-    synced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    synced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_searched_at TIMESTAMP
 );
 
 CREATE INDEX idx_library_artists_mb_id ON library_artists(musicbrainz_id);
@@ -53,7 +54,8 @@ CREATE TABLE library_albums (
     album_type VARCHAR(64),
     status VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN',
     source VARCHAR(32) NOT NULL DEFAULT 'LIDARR',
-    synced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    synced_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_searched_at TIMESTAMP
 );
 
 CREATE INDEX idx_library_albums_mb_id ON library_albums(musicbrainz_id);
@@ -68,7 +70,7 @@ CREATE TABLE media_requests (
     musicbrainz_album_id VARCHAR(36),
     artist_name VARCHAR(512) NOT NULL,
     album_title VARCHAR(512),
-    status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    status VARCHAR(32) NOT NULL DEFAULT 'REQUESTED',
     lidarr_artist_id BIGINT,
     lidarr_album_id BIGINT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -16,25 +16,31 @@ import java.util.UUID
 @Service
 class LibraryAlbumService {
 
-    fun upsertFromLidarr(libraryArtistId: UUID, album: LidarrAlbum): LibraryAlbum = transaction {
+    fun upsertFromLidarr(libraryArtistId: UUID, album: LidarrAlbum, searchTriggered: Boolean = false): LibraryAlbum = transaction {
+        val status = deriveStatus(album)
         val existing = LibraryAlbums.selectAll()
             .where { LibraryAlbums.lidarrId eq album.id }
             .singleOrNull()
 
+        val lastSearchedAt = if (searchTriggered) Instant.now() else null
+
         if (existing != null) {
+            val preservedLastSearchedAt = existing[LibraryAlbums.lastSearchedAt]
             LibraryAlbums.update({ LibraryAlbums.lidarrId eq album.id }) {
                 it[title] = album.title
                 it[musicbrainzId] = album.foreignAlbumId
                 it[albumType] = album.albumType
-                it[status] = MediaStatus.AVAILABLE.name
+                it[this.status] = status.name
                 it[syncedAt] = Instant.now()
+                it[this.lastSearchedAt] = lastSearchedAt
             }
             return@transaction mapRow(existing).copy(
                 title = album.title,
                 musicbrainzId = album.foreignAlbumId,
                 albumType = album.albumType,
-                status = MediaStatus.AVAILABLE,
-                syncedAt = Instant.now()
+                status = status,
+                syncedAt = Instant.now(),
+                lastSearchedAt = preservedLastSearchedAt
             )
         }
 
@@ -46,11 +52,19 @@ class LibraryAlbumService {
             it[lidarrId] = album.id
             it[title] = album.title
             it[albumType] = album.albumType
-            it[status] = MediaStatus.AVAILABLE.name
+            it[this.status] = status.name
             it[mediaSource] = MediaSource.LIDARR.name
             it[syncedAt] = Instant.now()
+            it[this.lastSearchedAt] = lastSearchedAt
         }
-        LibraryAlbum(id, libraryArtistId, album.foreignAlbumId, album.id, album.title, album.albumType, MediaStatus.AVAILABLE, MediaSource.LIDARR, Instant.now())
+        LibraryAlbum(id, libraryArtistId, album.foreignAlbumId, album.id, album.title, album.albumType, status, MediaSource.LIDARR, Instant.now(), lastSearchedAt)
+    }
+
+    fun updateAfterSearch(lidarrId: Long, at: Instant): Unit = transaction {
+        LibraryAlbums.update({ LibraryAlbums.lidarrId eq lidarrId }) {
+            it[status] = MediaStatus.MONITORED.name
+            it[lastSearchedAt] = at
+        }
     }
 
     fun findByMusicbrainzId(mbId: String): LibraryAlbum? = transaction {
@@ -66,6 +80,14 @@ class LibraryAlbumService {
             .map(::mapRow)
     }
 
+    private fun deriveStatus(album: LidarrAlbum): MediaStatus {
+        val stats = album.statistics
+        if (stats != null && stats.totalTrackCount > 0 && stats.trackFileCount >= stats.totalTrackCount) {
+            return MediaStatus.AVAILABLE
+        }
+        return if (album.monitored) MediaStatus.MONITORED else MediaStatus.UNMONITORED
+    }
+
     private fun mapRow(row: ResultRow) = LibraryAlbum(
         id = row[LibraryAlbums.id].value,
         artistId = row[LibraryAlbums.artistId].value,
@@ -75,6 +97,7 @@ class LibraryAlbumService {
         albumType = row[LibraryAlbums.albumType],
         status = MediaStatus.valueOf(row[LibraryAlbums.status]),
         source = MediaSource.valueOf(row[LibraryAlbums.mediaSource]),
-        syncedAt = row[LibraryAlbums.syncedAt]
+        syncedAt = row[LibraryAlbums.syncedAt],
+        lastSearchedAt = row[LibraryAlbums.lastSearchedAt]
     )
 }

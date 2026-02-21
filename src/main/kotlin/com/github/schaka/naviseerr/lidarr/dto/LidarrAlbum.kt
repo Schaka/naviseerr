@@ -10,5 +10,7 @@ data class LidarrAlbum(
     val albumType: String,
     val title: String,
     val foreignAlbumId: String,
-    var path: String?
+    var path: String?,
+    val monitored: Boolean = false,
+    val statistics: AlbumStatistics? = null
 )

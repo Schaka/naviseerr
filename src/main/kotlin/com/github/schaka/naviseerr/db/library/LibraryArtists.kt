@@ -11,4 +11,5 @@ object LibraryArtists : UUIDTable("library_artists") {
     val status = varchar("status", 32).default("UNKNOWN")
     val mediaSource = varchar("source", 32).default("LIDARR")
     val syncedAt = timestamp("synced_at")
+    val lastSearchedAt = timestamp("last_searched_at").nullable()
 }

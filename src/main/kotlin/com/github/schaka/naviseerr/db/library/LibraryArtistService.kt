@@ -16,25 +16,31 @@ import java.util.UUID
 @Service
 class LibraryArtistService {
 
-    fun upsertFromLidarr(artist: LidarrArtist): LibraryArtist = transaction {
+    fun upsertFromLidarr(artist: LidarrArtist, allAlbumsAvailable: Boolean, searchTriggered: Boolean = false): LibraryArtist = transaction {
+        val status = deriveStatus(artist, allAlbumsAvailable)
         val existing = LibraryArtists.selectAll()
             .where { LibraryArtists.lidarrId eq artist.id }
             .singleOrNull()
 
+        val lastSearchedAt = if (searchTriggered) Instant.now() else null
+
         if (existing != null) {
+            val preservedLastSearchedAt = existing[LibraryArtists.lastSearchedAt]
             LibraryArtists.update({ LibraryArtists.lidarrId eq artist.id }) {
                 it[name] = artist.artistName
                 it[cleanName] = artist.cleanName
                 it[musicbrainzId] = artist.foreignArtistId
-                it[status] = MediaStatus.AVAILABLE.name
+                it[this.status] = status.name
                 it[syncedAt] = Instant.now()
+                it[this.lastSearchedAt] = lastSearchedAt
             }
             return@transaction mapRow(existing).copy(
                 name = artist.artistName,
                 cleanName = artist.cleanName,
                 musicbrainzId = artist.foreignArtistId,
-                status = MediaStatus.AVAILABLE,
-                syncedAt = Instant.now()
+                status = status,
+                syncedAt = Instant.now(),
+                lastSearchedAt = preservedLastSearchedAt
             )
         }
 
@@ -45,11 +51,19 @@ class LibraryArtistService {
             it[lidarrId] = artist.id
             it[name] = artist.artistName
             it[cleanName] = artist.cleanName
-            it[status] = MediaStatus.AVAILABLE.name
+            it[this.status] = status.name
             it[mediaSource] = MediaSource.LIDARR.name
             it[syncedAt] = Instant.now()
+            it[this.lastSearchedAt] = lastSearchedAt
         }
-        LibraryArtist(id, artist.foreignArtistId, artist.id, artist.artistName, artist.cleanName, MediaStatus.AVAILABLE, MediaSource.LIDARR, Instant.now())
+        LibraryArtist(id, artist.foreignArtistId, artist.id, artist.artistName, artist.cleanName, status, MediaSource.LIDARR, Instant.now(), lastSearchedAt)
+    }
+
+    fun updateAfterSearch(lidarrId: Long, at: Instant): Unit = transaction {
+        LibraryArtists.update({ LibraryArtists.lidarrId eq lidarrId }) {
+            it[status] = MediaStatus.MONITORED.name
+            it[lastSearchedAt] = at
+        }
     }
 
     fun findByMusicbrainzId(mbId: String): LibraryArtist? = transaction {
@@ -63,6 +77,11 @@ class LibraryArtistService {
         LibraryArtists.selectAll().map(::mapRow)
     }
 
+    private fun deriveStatus(artist: LidarrArtist, allAlbumsAvailable: Boolean): MediaStatus {
+        if (allAlbumsAvailable) return MediaStatus.AVAILABLE
+        return if (artist.monitored) MediaStatus.MONITORED else MediaStatus.UNMONITORED
+    }
+
     private fun mapRow(row: ResultRow) = LibraryArtist(
         id = row[LibraryArtists.id].value,
         musicbrainzId = row[LibraryArtists.musicbrainzId],
@@ -71,6 +90,7 @@ class LibraryArtistService {
         cleanName = row[LibraryArtists.cleanName],
         status = MediaStatus.valueOf(row[LibraryArtists.status]),
         source = MediaSource.valueOf(row[LibraryArtists.mediaSource]),
-        syncedAt = row[LibraryArtists.syncedAt]
+        syncedAt = row[LibraryArtists.syncedAt],
+        lastSearchedAt = row[LibraryArtists.lastSearchedAt]
     )
 }
