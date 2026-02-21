@@ -104,7 +104,7 @@ jobs:
             <SslPort>6868</SslPort>
             <EnableSsl>False</EnableSsl>
             <LaunchBrowser>True</LaunchBrowser>
-            <ApiKey><ApiKey>leyden-training-api-key</ApiKey></ApiKey>
+            <ApiKey>leyden-training-api-key</ApiKey>
             <AuthenticationMethod>None</AuthenticationMethod>
             <AuthenticationRequired>Disabled</AuthenticationRequired>
             <Branch>nightly</Branch>
@@ -189,7 +189,7 @@ jobs:
             <SslPort>6868</SslPort>
             <EnableSsl>False</EnableSsl>
             <LaunchBrowser>True</LaunchBrowser>
-            <ApiKey><ApiKey>leyden-training-api-key</ApiKey></ApiKey>
+            <ApiKey>leyden-training-api-key</ApiKey>
             <AuthenticationMethod>None</AuthenticationMethod>
             <AuthenticationRequired>Disabled</AuthenticationRequired>
             <Branch>nightly</Branch>
