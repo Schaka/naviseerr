@@ -99,14 +99,21 @@ jobs:
 
           cat > /tmp/lidarr-leyden/config/config.xml << 'EOF'
           <Config>
-            <LogLevel>info</LogLevel>
-            <UpdateMechanism>Docker</UpdateMechanism>
             <BindAddress>*</BindAddress>
             <Port>8686</Port>
+            <SslPort>6868</SslPort>
             <EnableSsl>False</EnableSsl>
-            <ApiKey>leyden-training-api-key</ApiKey>
+            <LaunchBrowser>True</LaunchBrowser>
+            <ApiKey><ApiKey>leyden-training-api-key</ApiKey></ApiKey>
             <AuthenticationMethod>None</AuthenticationMethod>
             <AuthenticationRequired>Disabled</AuthenticationRequired>
+            <Branch>nightly</Branch>
+            <LogLevel>debug</LogLevel>
+            <SslCertPath></SslCertPath>
+            <SslCertPassword></SslCertPassword>
+            <UrlBase></UrlBase>
+            <InstanceName>Lidarr</InstanceName>
+            <UpdateMechanism>Docker</UpdateMechanism>
           </Config>
           EOF
 
@@ -177,14 +184,21 @@ jobs:
 
           cat > /tmp/lidarr-leyden/config/config.xml << 'EOF'
           <Config>
-            <LogLevel>info</LogLevel>
-            <UpdateMechanism>Docker</UpdateMechanism>
             <BindAddress>*</BindAddress>
             <Port>8686</Port>
+            <SslPort>6868</SslPort>
             <EnableSsl>False</EnableSsl>
-            <ApiKey>leyden-training-api-key</ApiKey>
+            <LaunchBrowser>True</LaunchBrowser>
+            <ApiKey><ApiKey>leyden-training-api-key</ApiKey></ApiKey>
             <AuthenticationMethod>None</AuthenticationMethod>
             <AuthenticationRequired>Disabled</AuthenticationRequired>
+            <Branch>nightly</Branch>
+            <LogLevel>debug</LogLevel>
+            <SslCertPath></SslCertPath>
+            <SslCertPassword></SslCertPassword>
+            <UrlBase></UrlBase>
+            <InstanceName>Lidarr</InstanceName>
+            <UpdateMechanism>Docker</UpdateMechanism>
           </Config>
           EOF
 
