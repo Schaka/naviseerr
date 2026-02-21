@@ -6,8 +6,10 @@ import com.github.schaka.naviseerr.db.library.enums.RequestStatus
 import com.github.schaka.naviseerr.db.user.NaviseerrUser
 import com.github.schaka.naviseerr.lidarr.LidarrClient
 import com.github.schaka.naviseerr.lidarr.LidarrConfigCache
+import com.github.schaka.naviseerr.lidarr.dto.AddArtistOptions
 import com.github.schaka.naviseerr.lidarr.dto.LidarrAddArtistRequest
 import com.github.schaka.naviseerr.lidarr.dto.LidarrAddAlbumRequest
+import com.github.schaka.naviseerr.lidarr.dto.LidarrAlbum
 import com.github.schaka.naviseerr.lidarr.dto.LidarrMonitorRequest
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -76,6 +78,8 @@ class RequestService(
         val config = lidarrConfigCache.getConfig()
 
         val artistLookup = lidarrClient.lookupArtist("lidarr:$mbArtistId")
+        var artistJustAdded = false
+
         val lidarrArtistId = if (artistLookup.isNotEmpty() && artistLookup.first().id != 0L) {
             artistLookup.first().id
         } else {
@@ -86,18 +90,23 @@ class RequestService(
                     qualityProfileId = config.qualityProfileId,
                     metadataProfileId = config.metadataProfileId,
                     rootFolderPath = config.rootFolderPath,
+                    addOptions = AddArtistOptions("none", false)
                 )
             )
             log.info("Added artist '{}' to Lidarr with id {}", artistName, added.id)
+            artistJustAdded = true
             added.id
         }
 
-        val albumLookup = lidarrClient.lookupAlbum("lidarr:$mbAlbumId")
-        val lidarrAlbumId = if (albumLookup.isNotEmpty() && albumLookup.first().id != 0L) {
-            val album = albumLookup.first()
+        val albumLookup = lookupAlbumWithWaitCondition(mbAlbumId, artistJustAdded)
+        val lidarrAlbumId = if (albumLookup?.id != 0L) {
+            val album = albumLookup!!
             lidarrClient.monitorAlbums(LidarrMonitorRequest(listOf(album.id)))
+            // TODO: trigger force search
             album.id
         } else {
+            // FIXME: I'm not really sure how it is even possible to add an album in Lidarr, it seems Lidarr just add them automatically with the artist
+            // maybe this is about missing metadata or if an album comes out after the artist was added to the library?
             val added = lidarrClient.addAlbum(
                 LidarrAddAlbumRequest(
                     foreignAlbumId = mbAlbumId,
@@ -110,5 +119,23 @@ class RequestService(
         }
 
         return mediaRequestService.updateStatus(request.id, RequestStatus.PROCESSING, lidarrArtistId = lidarrArtistId, lidarrAlbumId = lidarrAlbumId)
+    }
+
+    /**
+     * Upon adding a new artist to Lidarr, it will take a while for all albums to register. We're giving it up to 5 minutes if the artist was just added.
+     */
+    private fun lookupAlbumWithWaitCondition(mbAlbumId: String, artistJustAdded: Boolean, secondsWaited: Int = 0): LidarrAlbum? {
+        val albumLookup = lidarrClient.lookupAlbum("lidarr:$mbAlbumId")
+
+        if (!artistJustAdded || secondsWaited >= 300) {
+            return albumLookup.firstOrNull()
+        }
+
+        if (albumLookup.isEmpty() || albumLookup.first().id == 0L) {
+            Thread.sleep(5000)
+            return lookupAlbumWithWaitCondition(mbAlbumId, artistJustAdded, secondsWaited + 5)
+        }
+
+        return albumLookup.firstOrNull()
     }
 }

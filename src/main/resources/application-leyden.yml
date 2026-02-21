@@ -10,4 +10,4 @@ spring:
 
 lidarr:
   url: http://lidarr-leyden:8686
-  api-key: leyden-training-api-key
+  api-key: placeholder-overridden-by-training-run-jvm-opts

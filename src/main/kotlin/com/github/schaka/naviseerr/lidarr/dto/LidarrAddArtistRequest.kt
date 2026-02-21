@@ -12,6 +12,6 @@ data class LidarrAddArtistRequest(
 )
 
 data class AddArtistOptions(
-    val monitor: String = "all",
+    val monitor: String = "all", // all, future, missing, existing, first, latest, none
     val searchForMissingAlbums: Boolean = true
 )
