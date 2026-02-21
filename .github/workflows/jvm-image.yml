@@ -131,8 +131,8 @@ jobs:
             --name lidarr-leyden \
             --network naviseerr-leyden \
             -p 8686:8686 \
-            -e PUID=1000 \
-            -e PGID=1000 \
+            -e PUID=$(id -u) \
+            -e PGID=$(id -g) \
             -v /tmp/lidarr-leyden/config:/config \
             -v /tmp/music:/music \
             lscr.io/linuxserver/lidarr:nightly
@@ -143,7 +143,7 @@ jobs:
           until docker exec postgres-leyden pg_isready -U naviseerr; do sleep 2; done
 
           echo "Waiting for Lidarr..."
-          until curl -sf -o /dev/null http://localhost:8686/api/v1/system/status -H "X-Api-Key: leyden-training-api-key"; do sleep 5; done
+          until curl -sf -o /dev/null http://localhost:8686/ping; do sleep 5; done
 
       - name: Build JVM OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/amd64
@@ -216,8 +216,8 @@ jobs:
             --name lidarr-leyden \
             --network naviseerr-leyden \
             -p 8686:8686 \
-            -e PUID=1000 \
-            -e PGID=1000 \
+            -e PUID=$(id -u) \
+            -e PGID=$(id -g) \
             -v /tmp/lidarr-leyden/config:/config \
             -v /tmp/music:/music \
             lscr.io/linuxserver/lidarr:nightly
@@ -228,7 +228,7 @@ jobs:
           until docker exec postgres-leyden pg_isready -U naviseerr; do sleep 2; done
 
           echo "Waiting for Lidarr..."
-          until curl -sf -o /dev/null http://localhost:8686/api/v1/system/status -H "X-Api-Key: leyden-training-api-key"; do sleep 5; done
+          until curl -sf -o /dev/null http://localhost:8686/ping; do sleep 5; done
 
       - name: Build JVM ARM64 OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/arm64
