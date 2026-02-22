@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-leyden:5432/naviseerr
+    username: naviseerr
+    password: naviseerr
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+lidarr:
+  url: http://lidarr-leyden:8686
+  api-key: placeholder-overridden-by-training-run-jvm-opts

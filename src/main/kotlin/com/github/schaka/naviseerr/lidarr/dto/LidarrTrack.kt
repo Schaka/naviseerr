@@ -1,4 +1,4 @@
-package com.github.schaka.naviseerr.music_library.lidarr.dto
+package com.github.schaka.naviseerr.lidarr.dto
 
 data class LidarrTrack(
     val id: Long,

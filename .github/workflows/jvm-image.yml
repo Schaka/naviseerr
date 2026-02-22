@@ -93,6 +93,41 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Start Leyden training containers
+        run: |
+          mkdir -p /tmp/music
+
+          docker network create naviseerr-leyden
+
+          docker run -d \
+            --name postgres-leyden \
+            --network naviseerr-leyden \
+            -e POSTGRES_DB=naviseerr \
+            -e POSTGRES_USER=naviseerr \
+            -e POSTGRES_PASSWORD=naviseerr \
+            postgres:17
+
+          docker run -d \
+            --name lidarr-leyden \
+            --network naviseerr-leyden \
+            -p 8686:8686 \
+            -e PUID=$(id -u) \
+            -e PGID=$(id -g) \
+            -v /tmp/music:/music \
+            lscr.io/linuxserver/lidarr:nightly
+
+      - name: Wait for Leyden training containers to be ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until docker exec postgres-leyden pg_isready -U naviseerr; do sleep 2; done
+
+          echo "Waiting for Lidarr..."
+          until curl -sf -o /dev/null http://localhost:8686/ping; do sleep 5; done
+
+          docker cp lidarr-leyden:/config/config.xml /tmp/lidarr-config.xml
+          LIDARR_API_KEY=$(sed -n 's/.*<ApiKey>\([^<]*\)<\/ApiKey>.*/\1/p' /tmp/lidarr-config.xml)
+          echo "LIDARR_API_KEY=$LIDARR_API_KEY" >> $GITHUB_ENV
+
       - name: Build JVM OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/amd64
         env:
@@ -101,6 +136,8 @@ jobs:
           REPOSITORY_OWNER: ${{ github.repository_owner }}
           LC_ALL: "en_US.UTF-8"
           TARGET_PLATFORM: "amd64"
+          BUILDER_NETWORK: "naviseerr-leyden"
+          LIDARR_API_KEY: ${{ env.LIDARR_API_KEY }}
 
   build-jvm-aarch64:
     needs: [ run-test-suite ]
@@ -125,6 +162,41 @@ jobs:
         with:
           gradle-version: 9.3.1
 
+      - name: Start Leyden training containers
+        run: |
+          mkdir -p /tmp/music
+
+          docker network create naviseerr-leyden
+
+          docker run -d \
+            --name postgres-leyden \
+            --network naviseerr-leyden \
+            -e POSTGRES_DB=naviseerr \
+            -e POSTGRES_USER=naviseerr \
+            -e POSTGRES_PASSWORD=naviseerr \
+            postgres:17
+
+          docker run -d \
+            --name lidarr-leyden \
+            --network naviseerr-leyden \
+            -p 8686:8686 \
+            -e PUID=$(id -u) \
+            -e PGID=$(id -g) \
+            -v /tmp/music:/music \
+            lscr.io/linuxserver/lidarr:nightly
+
+      - name: Wait for Leyden training containers to be ready
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until docker exec postgres-leyden pg_isready -U naviseerr; do sleep 2; done
+
+          echo "Waiting for Lidarr..."
+          until curl -sf -o /dev/null http://localhost:8686/ping; do sleep 5; done
+
+          docker cp lidarr-leyden:/config/config.xml /tmp/lidarr-config.xml
+          LIDARR_API_KEY=$(sed -n 's/.*<ApiKey>\([^<]*\)<\/ApiKey>.*/\1/p' /tmp/lidarr-config.xml)
+          echo "LIDARR_API_KEY=$LIDARR_API_KEY" >> $GITHUB_ENV
+
       - name: Build JVM ARM64 OCI Image
         run: ./gradlew bootBuildImage --publishImage --imagePlatform linux/arm64
         env:
@@ -133,6 +205,8 @@ jobs:
           REPOSITORY_OWNER: ${{ github.repository_owner }}
           LC_ALL: "en_US.UTF-8"
           TARGET_PLATFORM: "arm64"
+          BUILDER_NETWORK: "naviseerr-leyden"
+          LIDARR_API_KEY: ${{ env.LIDARR_API_KEY }}
 
   combine-images:
     runs-on: ubuntu-latest
