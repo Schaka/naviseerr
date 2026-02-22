@@ -1,5 +1,6 @@
 package com.github.schaka.naviseerr.db.library
 
+import com.github.schaka.naviseerr.db.library.enums.RequestStatus
 import com.github.schaka.naviseerr.db.user.NaviseerrUsers
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -15,7 +16,7 @@ object MediaRequests : UUIDTable("media_requests") {
     val musicbrainzAlbumId = varchar("musicbrainz_album_id", 36).nullable()
     val artistName = varchar("artist_name", 512)
     val albumTitle = varchar("album_title", 512).nullable()
-    val status = varchar("status", 32).default("PENDING")
+    val status = enumerationByName<RequestStatus>("status", 32).default(RequestStatus.REQUESTED)
     val lidarrArtistId = long("lidarr_artist_id").nullable()
     val lidarrAlbumId = long("lidarr_album_id").nullable()
     val createdAt = timestamp("created_at")

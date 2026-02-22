@@ -30,7 +30,7 @@ class LibraryAlbumService {
                 it[title] = album.title
                 it[musicbrainzId] = album.foreignAlbumId
                 it[albumType] = album.albumType
-                it[this.status] = status.name
+                it[this.status] = status
                 it[syncedAt] = Instant.now()
                 it[this.lastSearchedAt] = lastSearchedAt ?: preservedLastSearchedAt
             }
@@ -52,8 +52,8 @@ class LibraryAlbumService {
             it[lidarrId] = album.id
             it[title] = album.title
             it[albumType] = album.albumType
-            it[this.status] = status.name
-            it[mediaSource] = MediaSource.LIDARR.name
+            it[this.status] = status
+            it[mediaSource] = MediaSource.LIDARR
             it[syncedAt] = Instant.now()
             it[this.lastSearchedAt] = lastSearchedAt
         }
@@ -62,7 +62,7 @@ class LibraryAlbumService {
 
     fun updateAfterSearch(lidarrId: Long, at: Instant): Unit = transaction {
         LibraryAlbums.update({ LibraryAlbums.lidarrId eq lidarrId }) {
-            it[status] = MediaStatus.MONITORED.name
+            it[status] = MediaStatus.MONITORED
             it[lastSearchedAt] = at
         }
     }
@@ -95,8 +95,8 @@ class LibraryAlbumService {
         lidarrId = row[LibraryAlbums.lidarrId],
         title = row[LibraryAlbums.title],
         albumType = row[LibraryAlbums.albumType],
-        status = MediaStatus.valueOf(row[LibraryAlbums.status]),
-        source = MediaSource.valueOf(row[LibraryAlbums.mediaSource]),
+        status = row[LibraryAlbums.status],
+        source = row[LibraryAlbums.mediaSource],
         syncedAt = row[LibraryAlbums.syncedAt],
         lastSearchedAt = row[LibraryAlbums.lastSearchedAt]
     )

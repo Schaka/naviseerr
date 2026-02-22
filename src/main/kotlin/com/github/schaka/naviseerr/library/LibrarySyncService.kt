@@ -22,14 +22,13 @@ class LibrarySyncService(
 
     @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.MINUTES)
     fun syncLibrary() {
-        try {
-            log.info("Starting library sync from Lidarr")
-            val artists = lidarrClient.getAllArtists()
-            val allAlbums = lidarrClient.getAllAlbums()
-            val albumsByArtist = allAlbums.groupBy { it.artistId }
+        log.info("Starting library sync from Lidarr")
+        val artists = lidarrClient.getAllArtists()
+        val allAlbums = lidarrClient.getAllAlbums()
+        val albumsByArtist = allAlbums.groupBy { it.artistId }
 
-            artists.forEach { artist ->
-                // First upsert to ensure the artist record exists and get its DB ID
+        artists.forEach { artist ->
+            try {
                 val libraryArtist = libraryArtistService.upsertFromLidarr(artist, false)
 
                 val albums = albumsByArtist[artist.id] ?: emptyList()
@@ -37,7 +36,6 @@ class LibrarySyncService(
                     libraryAlbumService.upsertFromLidarr(libraryArtist.id, album)
                 }
 
-                // Re-upsert artist with correct availability computed from albums
                 val allAlbumsAvailable = savedAlbums.isNotEmpty() && savedAlbums.all { it.status == MediaStatus.AVAILABLE }
                 val finalArtist = libraryArtistService.upsertFromLidarr(artist, allAlbumsAvailable)
 
@@ -50,11 +48,11 @@ class LibrarySyncService(
                 if (finalArtist.status == MediaStatus.AVAILABLE && artist.id != 0L) {
                     mediaRequestService.updateAllActiveToAvailableByLidarrArtistId(artist.id)
                 }
+            } catch (e: Exception) {
+                log.error("Failed to sync artist '{}' (lidarrId={})", artist.artistName, artist.id, e)
             }
-
-            log.info("Library sync complete: {} artists, {} albums", artists.size, allAlbums.size)
-        } catch (e: Exception) {
-            log.error("Library sync failed", e)
         }
+
+        log.info("Library sync complete: {} artists, {} albums", artists.size, allAlbums.size)
     }
 }

@@ -33,7 +33,7 @@ class MediaRequestService {
             it[this.musicbrainzAlbumId] = musicbrainzAlbumId
             it[this.artistName] = artistName
             it[this.albumTitle] = albumTitle
-            it[status] = RequestStatus.REQUESTED.name
+            it[status] = RequestStatus.REQUESTED
             it[createdAt] = now
             it[updatedAt] = now
             if (lidarrArtistId != null) it[this.lidarrArtistId] = lidarrArtistId
@@ -59,7 +59,7 @@ class MediaRequestService {
         MediaRequests.selectAll()
             .where {
                     (MediaRequests.musicbrainzArtistId eq mbArtistId) and
-                    (MediaRequests.status eq RequestStatus.REQUESTED.name)
+                    (MediaRequests.status eq RequestStatus.REQUESTED)
             }
             .singleOrNull()
             ?.let(::mapRow)
@@ -69,7 +69,7 @@ class MediaRequestService {
         MediaRequests.selectAll()
             .where {
                     (MediaRequests.musicbrainzAlbumId eq mbAlbumId) and
-                    (MediaRequests.status eq RequestStatus.REQUESTED.name)
+                    (MediaRequests.status eq RequestStatus.REQUESTED)
             }
             .singleOrNull()
             ?.let(::mapRow)
@@ -78,9 +78,9 @@ class MediaRequestService {
     fun updateAllActiveToAvailableByLidarrAlbumId(lidarrAlbumId: Long): Unit = transaction {
         MediaRequests.update({
             (MediaRequests.lidarrAlbumId eq lidarrAlbumId) and
-                (MediaRequests.status eq RequestStatus.REQUESTED.name)
+                (MediaRequests.status eq RequestStatus.REQUESTED)
         }) {
-            it[status] = RequestStatus.AVAILABLE.name
+            it[status] = RequestStatus.AVAILABLE
             it[updatedAt] = Instant.now()
         }
     }
@@ -88,9 +88,9 @@ class MediaRequestService {
     fun updateAllActiveToAvailableByLidarrArtistId(lidarrArtistId: Long): Unit = transaction {
         MediaRequests.update({
             (MediaRequests.lidarrArtistId eq lidarrArtistId) and
-                (MediaRequests.status eq RequestStatus.REQUESTED.name)
+                (MediaRequests.status eq RequestStatus.REQUESTED)
         }) {
-            it[status] = RequestStatus.AVAILABLE.name
+            it[status] = RequestStatus.AVAILABLE
             it[updatedAt] = Instant.now()
         }
     }
@@ -104,7 +104,7 @@ class MediaRequestService {
         musicbrainzAlbumId = row[MediaRequests.musicbrainzAlbumId],
         artistName = row[MediaRequests.artistName],
         albumTitle = row[MediaRequests.albumTitle],
-        status = RequestStatus.valueOf(row[MediaRequests.status]),
+        status = row[MediaRequests.status],
         lidarrArtistId = row[MediaRequests.lidarrArtistId],
         lidarrAlbumId = row[MediaRequests.lidarrAlbumId],
         createdAt = row[MediaRequests.createdAt],

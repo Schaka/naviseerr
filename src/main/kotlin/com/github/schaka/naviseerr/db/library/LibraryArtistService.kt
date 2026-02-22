@@ -30,7 +30,7 @@ class LibraryArtistService {
                 it[name] = artist.artistName
                 it[cleanName] = artist.cleanName
                 it[musicbrainzId] = artist.foreignArtistId
-                it[this.status] = status.name
+                it[this.status] = status
                 it[syncedAt] = Instant.now()
                 it[this.lastSearchedAt] = lastSearchedAt ?: preservedLastSearchedAt
             }
@@ -51,8 +51,8 @@ class LibraryArtistService {
             it[lidarrId] = artist.id
             it[name] = artist.artistName
             it[cleanName] = artist.cleanName
-            it[this.status] = status.name
-            it[mediaSource] = MediaSource.LIDARR.name
+            it[this.status] = status
+            it[mediaSource] = MediaSource.LIDARR
             it[syncedAt] = Instant.now()
             it[this.lastSearchedAt] = lastSearchedAt
         }
@@ -61,7 +61,7 @@ class LibraryArtistService {
 
     fun updateAfterSearch(lidarrId: Long, at: Instant): Unit = transaction {
         LibraryArtists.update({ LibraryArtists.lidarrId eq lidarrId }) {
-            it[status] = MediaStatus.MONITORED.name
+            it[status] = MediaStatus.MONITORED
             it[lastSearchedAt] = at
         }
     }
@@ -88,8 +88,8 @@ class LibraryArtistService {
         lidarrId = row[LibraryArtists.lidarrId],
         name = row[LibraryArtists.name],
         cleanName = row[LibraryArtists.cleanName],
-        status = MediaStatus.valueOf(row[LibraryArtists.status]),
-        source = MediaSource.valueOf(row[LibraryArtists.mediaSource]),
+        status = row[LibraryArtists.status],
+        source = row[LibraryArtists.mediaSource],
         syncedAt = row[LibraryArtists.syncedAt],
         lastSearchedAt = row[LibraryArtists.lastSearchedAt]
     )

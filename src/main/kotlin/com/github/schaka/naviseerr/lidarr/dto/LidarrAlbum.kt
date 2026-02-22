@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSetter
 import com.fasterxml.jackson.annotation.Nulls
 
 data class LidarrAlbum(
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    @JsonSetter(nulls = Nulls.SKIP)
     val id: Long = 0,
     val artistId: Long,
     val albumType: String,
