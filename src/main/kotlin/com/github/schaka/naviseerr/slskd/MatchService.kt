@@ -5,7 +5,7 @@ import com.github.schaka.naviseerr.slskd.dto.SearchMatchResult
 import com.github.schaka.naviseerr.slskd.dto.SearchResult
 import com.github.schaka.naviseerr.slskd.dto.TrackMatchResult
 import com.github.schaka.naviseerr.slskd.lucene.StopFileFilterFactory
-import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrTrack
+import com.github.schaka.naviseerr.lidarr.dto.LidarrTrack
 import org.apache.commons.text.similarity.LevenshteinDistance
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory
 import org.apache.lucene.analysis.custom.CustomAnalyzer

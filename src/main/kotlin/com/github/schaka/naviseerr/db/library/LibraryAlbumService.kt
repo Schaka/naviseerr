@@ -32,7 +32,7 @@ class LibraryAlbumService {
                 it[albumType] = album.albumType
                 it[this.status] = status.name
                 it[syncedAt] = Instant.now()
-                it[this.lastSearchedAt] = lastSearchedAt
+                it[this.lastSearchedAt] = lastSearchedAt ?: preservedLastSearchedAt
             }
             return@transaction mapRow(existing).copy(
                 title = album.title,
@@ -40,7 +40,7 @@ class LibraryAlbumService {
                 albumType = album.albumType,
                 status = status,
                 syncedAt = Instant.now(),
-                lastSearchedAt = preservedLastSearchedAt
+                lastSearchedAt = lastSearchedAt ?: preservedLastSearchedAt
             )
         }
 

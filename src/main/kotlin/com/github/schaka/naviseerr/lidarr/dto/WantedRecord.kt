@@ -8,6 +8,5 @@ data class WantedRecord(
     val foreignAlbumId: String,
     val albumType: String,
     val artist: LidarrArtist,
-    val releases: List<LidarrRelease>,
-
-    )
+    val releases: List<LidarrRelease>
+)

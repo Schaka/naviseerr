@@ -32,7 +32,7 @@ class LibraryArtistService {
                 it[musicbrainzId] = artist.foreignArtistId
                 it[this.status] = status.name
                 it[syncedAt] = Instant.now()
-                it[this.lastSearchedAt] = lastSearchedAt
+                it[this.lastSearchedAt] = lastSearchedAt ?: preservedLastSearchedAt
             }
             return@transaction mapRow(existing).copy(
                 name = artist.artistName,
@@ -40,7 +40,7 @@ class LibraryArtistService {
                 musicbrainzId = artist.foreignArtistId,
                 status = status,
                 syncedAt = Instant.now(),
-                lastSearchedAt = preservedLastSearchedAt
+                lastSearchedAt = lastSearchedAt ?: preservedLastSearchedAt
             )
         }
 

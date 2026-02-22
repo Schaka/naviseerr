@@ -1,6 +1,7 @@
 package com.github.schaka.naviseerr.library
 
 import com.github.schaka.naviseerr.db.library.*
+import com.github.schaka.naviseerr.db.library.MediaRequests.albumTitle
 import com.github.schaka.naviseerr.db.library.enums.MediaStatus
 import com.github.schaka.naviseerr.db.user.NaviseerrUser
 import com.github.schaka.naviseerr.lidarr.LidarrClient
@@ -84,16 +85,9 @@ class RequestService(
             throw MediaAlreadyAvailableException("Album '$albumTitle' is already in the library")
         }
 
-        if (existingAlbum?.status == MediaStatus.MONITORED) {
-            validateSearchAllowed(existingAlbum)
-            return monitorAndSearchAlbum(existingAlbum, albumTitle, user, mbArtistId, mbAlbumId, artistName)
-        }
-
-        val existingRequest = mediaRequestService.findActiveByMusicbrainzAlbumId(mbAlbumId)
-        if (existingRequest != null) return existingRequest
-
         val config = lidarrConfigCache.getConfig()
         val artistLookup = lidarrClient.lookupArtist("lidarr:$mbArtistId")
+
         var artistJustAdded = false
 
         val lidarrArtist = if (artistLookup.isNotEmpty() && artistLookup.first().id != 0L) {
@@ -115,6 +109,15 @@ class RequestService(
             libraryArtistService.upsertFromLidarr(added, false, false)
             added
         }
+
+        if (existingAlbum?.status == MediaStatus.MONITORED) {
+            validateSearchAllowed(existingAlbum)
+            return monitorAndSearchAlbum(lidarrArtist, existingAlbum, user, mbArtistId, mbAlbumId, artistName)
+        }
+
+        val existingRequest = mediaRequestService.findActiveByMusicbrainzAlbumId(mbAlbumId)
+        if (existingRequest != null) return existingRequest
+
 
         val albumLookup = lookupAlbumWithWaitCondition(mbAlbumId, artistJustAdded)
         val libraryArtist = libraryArtistService.findByMusicbrainzId(mbArtistId) ?: throw IllegalStateException("Artist: '$artistName' - '$mbArtistId' must exist in database")
@@ -153,8 +156,8 @@ class RequestService(
     }
 
     private fun monitorAndSearchAlbum(
+        lidarrArtist: LidarrArtist,
         existingAlbum: LibraryAlbum,
-        albumTitle: String,
         user: NaviseerrUser,
         mbArtistId: String,
         mbAlbumId: String,
@@ -163,10 +166,10 @@ class RequestService(
         val lidarrAlbumId = existingAlbum.lidarrId!!
         lidarrClient.searchAlbums(LidarrSearchCommand("AlbumSearch", albumIds = listOf(lidarrAlbumId)))
         libraryAlbumService.updateAfterSearch(lidarrAlbumId, Instant.now())
-        log.info("Triggered re-search for monitored album '{}' in Lidarr", albumTitle)
+        log.info("Triggered re-search for monitored album '{}' in Lidarr", existingAlbum.title)
         return mediaRequestService.create(
-            user.id, mbArtistId, mbAlbumId, artistName, albumTitle,
-            lidarrArtistId = lidarrAlbumId, // FIXME: should be id of artist, pulled from library
+            user.id, mbArtistId, mbAlbumId, artistName, existingAlbum.title,
+            lidarrArtistId = lidarrArtist.id,
             lidarrAlbumId = lidarrAlbumId
         )
     }
@@ -203,11 +206,11 @@ class RequestService(
     /**
      * Upon adding a new artist to Lidarr, it will take a while for all albums to register. We're giving it up to 5 minutes if the artist was just added.
      */
-    private fun lookupAlbumWithWaitCondition(mbAlbumId: String, artistJustAdded: Boolean, secondsWaited: Int = 0): LidarrAlbum? {
+    private tailrec fun lookupAlbumWithWaitCondition(mbAlbumId: String, artistJustAdded: Boolean, secondsWaited: Int = 0): LidarrAlbum? {
         val albumLookup = lidarrClient.lookupAlbum("lidarr:$mbAlbumId")
 
         // single type can be found but, but usually isn't added by Lidarr automatically, so we need to force add it in the next step
-        if (!artistJustAdded || secondsWaited >= 300 || albumLookup.firstOrNull()?.albumType in lidarrConfigCache.allowedReleaseTypes()) {
+        if (!artistJustAdded || secondsWaited >= 180 || albumLookup.firstOrNull()?.albumType in lidarrConfigCache.allowedReleaseTypes()) {
             return albumLookup.firstOrNull()
         }
 

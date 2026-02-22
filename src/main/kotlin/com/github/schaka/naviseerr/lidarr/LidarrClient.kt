@@ -1,7 +1,6 @@
 package com.github.schaka.naviseerr.lidarr
 
 import com.github.schaka.naviseerr.lidarr.dto.*
-import com.github.schaka.naviseerr.music_library.lidarr.dto.*
 import com.github.schaka.naviseerr.lidarr.dto.quality.QualityDefinition
 import feign.Param
 import feign.RequestLine

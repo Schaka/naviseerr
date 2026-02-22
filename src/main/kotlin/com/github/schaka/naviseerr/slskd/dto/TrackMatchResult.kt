@@ -1,6 +1,6 @@
 package com.github.schaka.naviseerr.slskd.dto
 
-import com.github.schaka.naviseerr.music_library.lidarr.dto.LidarrTrack
+import com.github.schaka.naviseerr.lidarr.dto.LidarrTrack
 
 data class TrackMatchResult(
     val lidarrTrack: LidarrTrack,

@@ -17,5 +17,5 @@ data class LidarrArtist(
     val metadataProfileId: Int? = null,
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
-    val albums: MutableList<LidarrAlbum> = ArrayList(),
+    val albums: List<LidarrAlbum> = listOf(),
 )
