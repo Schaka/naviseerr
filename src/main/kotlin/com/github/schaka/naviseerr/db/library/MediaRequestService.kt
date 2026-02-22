@@ -1,9 +1,14 @@
 package com.github.schaka.naviseerr.db.library
 
+import com.github.schaka.naviseerr.db.download.DownloadJobs
 import com.github.schaka.naviseerr.db.library.enums.RequestStatus
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -52,6 +57,18 @@ class MediaRequestService {
     fun findAll(): List<MediaRequest> = transaction {
         MediaRequests.selectAll()
             .orderBy(MediaRequests.createdAt)
+            .map(::mapRow)
+    }
+
+    fun findLidarrRequests(): List<MediaRequest> = transaction {
+        MediaRequests
+            .join(DownloadJobs, JoinType.LEFT, onColumn = MediaRequests.id, otherColumn = DownloadJobs.mediaRequestId)
+            .selectAll()
+            .where {
+                MediaRequests.lidarrArtistId.isNotNull() and
+                (MediaRequests.status neq RequestStatus.FAILED) and
+                DownloadJobs.id.isNull()
+            }
             .map(::mapRow)
     }
 
