@@ -64,8 +64,6 @@ CREATE INDEX idx_library_albums_artist_id ON library_albums(artist_id);
 CREATE TABLE media_requests (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES naviseerr_users(id),
-    artist_id UUID REFERENCES library_artists(id),
-    album_id UUID REFERENCES library_albums(id),
     musicbrainz_artist_id VARCHAR(36) NOT NULL,
     musicbrainz_album_id VARCHAR(36),
     artist_name VARCHAR(512) NOT NULL,
@@ -77,35 +75,66 @@ CREATE TABLE media_requests (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE media_request_download_jobs (
+    id UUID PRIMARY KEY,
+    media_request_id UUID NOT NULL REFERENCES media_requests(id),
+    job_type VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (media_request_id, job_type)
+);
+
+CREATE INDEX idx_media_request_download_jobs_request_id ON media_request_download_jobs(media_request_id);
+
 CREATE INDEX idx_media_requests_user_id ON media_requests(user_id);
 CREATE INDEX idx_media_requests_status ON media_requests(status);
 
-CREATE TABLE download_jobs (
-    id UUID PRIMARY KEY,
-    media_request_id UUID REFERENCES media_requests(id),
-    job_type VARCHAR(16) NOT NULL,
+CREATE TABLE lidarr_download_jobs (
+    job_id UUID PRIMARY KEY REFERENCES media_request_download_jobs(id),
     status VARCHAR(32) NOT NULL,
     artist_name VARCHAR(512) NOT NULL,
     album_title VARCHAR(512),
     musicbrainz_artist_id VARCHAR(36),
     musicbrainz_album_id VARCHAR(36),
-    lidarr_artist_id BIGINT,
-    lidarr_album_id BIGINT,
-    lidarr_history_id BIGINT,
+    lidarr_artist_id BIGINT NOT NULL,
+    lidarr_album_id BIGINT NOT NULL,
+    lidarr_history_id BIGINT NOT NULL,
     download_client VARCHAR(128),
-    download_protocol VARCHAR(32),
-    slskd_username VARCHAR(256),
-    retry_count INTEGER NOT NULL DEFAULT 0,
+    download_protocol VARCHAR(32) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_download_jobs_status ON download_jobs(status);
-CREATE INDEX idx_download_jobs_type_status ON download_jobs(job_type, status);
+CREATE INDEX idx_lidarr_download_jobs_status ON lidarr_download_jobs(status);
 
-CREATE TABLE download_job_files (
+CREATE TABLE lidarr_download_job_files (
     id UUID PRIMARY KEY,
-    job_id UUID NOT NULL REFERENCES download_jobs(id),
+    job_id UUID NOT NULL REFERENCES lidarr_download_jobs(job_id),
+    file_path VARCHAR(1024) NOT NULL,
+    acoustid_status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    post_processing_status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_lidarr_download_job_files_job_id ON lidarr_download_job_files(job_id);
+
+CREATE TABLE slskd_download_jobs (
+    job_id UUID PRIMARY KEY REFERENCES media_request_download_jobs(id),
+    status VARCHAR(32) NOT NULL,
+    artist_name VARCHAR(512) NOT NULL,
+    album_title VARCHAR(512),
+    musicbrainz_artist_id VARCHAR(36),
+    musicbrainz_album_id VARCHAR(36),
+    slskd_username VARCHAR(256) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_slskd_download_jobs_status ON slskd_download_jobs(status);
+
+CREATE TABLE slskd_download_job_files (
+    id UUID PRIMARY KEY,
+    job_id UUID NOT NULL REFERENCES slskd_download_jobs(job_id),
     file_path VARCHAR(1024) NOT NULL,
     acoustid_status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
     post_processing_status VARCHAR(32) NOT NULL DEFAULT 'PENDING',
@@ -114,11 +143,4 @@ CREATE TABLE download_job_files (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_download_job_files_job_id ON download_job_files(job_id);
-
-CREATE TABLE download_source_blacklist (
-    id UUID PRIMARY KEY,
-    job_id UUID NOT NULL REFERENCES download_jobs(id),
-    source_identifier VARCHAR(512) NOT NULL,
-    blacklisted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+CREATE INDEX idx_slskd_download_job_files_job_id ON slskd_download_job_files(job_id);

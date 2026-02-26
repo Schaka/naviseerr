@@ -7,8 +7,6 @@ import java.util.UUID
 data class MediaRequest(
     val id: UUID,
     val userId: UUID,
-    val artistId: UUID?,
-    val albumId: UUID?,
     val musicbrainzArtistId: String,
     val musicbrainzAlbumId: String?,
     val artistName: String,

@@ -10,8 +10,6 @@ import java.util.UUID
 
 object MediaRequests : UUIDTable("media_requests") {
     val userId = reference("user_id", NaviseerrUsers)
-    val artistId: Column<EntityID<UUID>?> = reference("artist_id", LibraryArtists).nullable()
-    val albumId: Column<EntityID<UUID>?> = reference("album_id", LibraryAlbums).nullable()
     val musicbrainzArtistId = varchar("musicbrainz_artist_id", 36)
     val musicbrainzAlbumId = varchar("musicbrainz_album_id", 36).nullable()
     val artistName = varchar("artist_name", 512)

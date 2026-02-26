@@ -1,8 +1,7 @@
 package com.github.schaka.naviseerr.download.processing
 
-import com.github.schaka.naviseerr.db.download.DownloadJob
-import com.github.schaka.naviseerr.db.download.DownloadJobFile
+import com.github.schaka.naviseerr.download.monitor.ProcessableDownload
 
 interface PostProcessingService {
-    fun process(job: DownloadJob, files: List<DownloadJobFile>)
+    fun process(download: ProcessableDownload)
 }
