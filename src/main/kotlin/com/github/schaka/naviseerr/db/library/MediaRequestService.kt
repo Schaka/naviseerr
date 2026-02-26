@@ -1,9 +1,14 @@
 package com.github.schaka.naviseerr.db.library
 
+import com.github.schaka.naviseerr.db.download.MediaRequestDownloadJobs
 import com.github.schaka.naviseerr.db.library.enums.RequestStatus
+import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -39,7 +44,7 @@ class MediaRequestService {
             if (lidarrArtistId != null) it[this.lidarrArtistId] = lidarrArtistId
             if (lidarrAlbumId != null) it[this.lidarrAlbumId] = lidarrAlbumId
         }
-        MediaRequest(id, userId, null, null, musicbrainzArtistId, musicbrainzAlbumId, artistName, albumTitle, RequestStatus.REQUESTED, lidarrArtistId, lidarrAlbumId, now, now)
+        MediaRequest(id, userId,  musicbrainzArtistId, musicbrainzAlbumId, artistName, albumTitle, RequestStatus.REQUESTED, lidarrArtistId, lidarrAlbumId, now, now)
     }
 
     fun findByUser(userId: UUID): List<MediaRequest> = transaction {
@@ -52,6 +57,24 @@ class MediaRequestService {
     fun findAll(): List<MediaRequest> = transaction {
         MediaRequests.selectAll()
             .orderBy(MediaRequests.createdAt)
+            .map(::mapRow)
+    }
+
+    fun findLidarrRequests(): List<MediaRequest> = transaction {
+        MediaRequests
+            .join(
+                MediaRequestDownloadJobs,
+                JoinType.LEFT,
+                onColumn = MediaRequests.id,
+                otherColumn = MediaRequestDownloadJobs.mediaRequestId,
+                additionalConstraint = { MediaRequestDownloadJobs.jobType eq "LIDARR" }
+            )
+            .selectAll()
+            .where {
+                MediaRequests.lidarrArtistId.isNotNull() and
+                (MediaRequests.status neq RequestStatus.FAILED) and
+                MediaRequestDownloadJobs.id.isNull()
+            }
             .map(::mapRow)
     }
 
@@ -98,8 +121,6 @@ class MediaRequestService {
     private fun mapRow(row: ResultRow) = MediaRequest(
         id = row[MediaRequests.id].value,
         userId = row[MediaRequests.userId].value,
-        artistId = row[MediaRequests.artistId]?.value,
-        albumId = row[MediaRequests.albumId]?.value,
         musicbrainzArtistId = row[MediaRequests.musicbrainzArtistId],
         musicbrainzAlbumId = row[MediaRequests.musicbrainzAlbumId],
         artistName = row[MediaRequests.artistName],

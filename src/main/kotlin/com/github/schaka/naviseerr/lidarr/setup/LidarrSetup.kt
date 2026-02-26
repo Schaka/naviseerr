@@ -100,15 +100,19 @@ class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
 
             Thread.sleep(30000)
 
-            client.post()
-                .uri("$baseUrl/api/v1/system/restart")
-                .header("X-Api-Key", apiKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .toBodilessEntity()
-
-            waitForReady()
+            restartServer()
         }
+    }
+
+    private fun restartServer() {
+        client.post()
+            .uri("$baseUrl/api/v1/system/restart")
+            .header("X-Api-Key", apiKey)
+            .contentType(MediaType.APPLICATION_JSON)
+            .retrieve()
+            .toBodilessEntity()
+
+        waitForReady()
     }
 
     /**
@@ -146,6 +150,9 @@ class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
                 .retrieve()
                 .toBodilessEntity()
         }
+
+        // I was never able to get this working without the restart
+        restartServer()
     }
 
     /**

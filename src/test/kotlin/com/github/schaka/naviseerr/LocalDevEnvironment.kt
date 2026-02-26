@@ -23,6 +23,7 @@ class LocalDevEnvironment {
     private var lidarrPort: Int = 0
     private var slskdPort: Int = 0
     private var lidarrApiKey: String = ""
+    private var jdbcUrl: String = ""
 
     fun start() {
         createSharedDirectories()
@@ -38,6 +39,7 @@ class LocalDevEnvironment {
         navidromePort = navidrome.getMappedPort(4533)
         lidarrPort = lidarr.getMappedPort(8686)
         slskdPort = slskd.getMappedPort(5030)
+        jdbcUrl = postgres.jdbcUrl
 
         NavidromeSetup("http://localhost:$navidromePort").createAdmin()
 
@@ -64,6 +66,7 @@ class LocalDevEnvironment {
     }
 
     fun logStartupInfo() {
+        log.info("Started Postgres at $jdbcUrl => Login via: naviseerr/naviseerr")
         log.info("Started Navidrome at http://localhost:$navidromePort => Login via: admin/admin")
         log.info("Started Lidarr at http://localhost:$lidarrPort => Login via: admin/admin | API-Key: $lidarrApiKey")
         log.info("Started Slskd at http://localhost:$slskdPort => Login via: admin/admin | API-Key: naviseerr-local-dev")
