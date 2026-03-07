@@ -33,21 +33,23 @@ The general guideline should be to only use LLMs as a rubber duck and discuss mo
 The code it generates is generally not good enough to pass review unless explicitly guided by a knowledgeable developer and contained to a few classes at most.
 
 
-### Development
-The Quasar/VueJS frontend is compiled as part of the build process. There is no separate build step and no reverse proxy hiding 2 servers.
-While not at all required, it is recommended to run a separate frontend server during development.
+### Setup
 
-- install NodeJS 22.10+
-- `corepack enable pnpm`
-- navigate to `src/main/frontend` and `pnpm dev` to start the server
+Naviseerr requires Navidrome, Lidarr (nightly), slskd, and the naviseerr-tagging sidecar to be running.
+The tagging service handles audio fingerprinting and metadata tagging via OneTagger and AcoustID.
+Configuration is provided via a mounted `application.yml`.
 
-If you require the backend to be running, the easiest way is
-`./gradlew bootRun`
+See [docs/setup.md](docs/setup.md) for a full docker-compose example and step-by-step instructions.
 
-However, I highly recommend IntelliJ Idea (Community Edition), as it integrates fairly seamlessly with both.
+### Local Development
 
-**I have no idea what I'm doing regarding frontend, so expect bad practices and general ugliness.**
-**To make changes faster, I relied on AI, heavily, to create the frontend.**
+The project includes a `LocalNaviseerrStarter` that spins up all dependencies automatically via
+Testcontainers — no manual service configuration needed. Lidarr, slskd, Navidrome, PostgreSQL,
+and the tagging service all start and configure themselves before Spring Boot boots.
+
+Note that slskd connects to the real Soulseek network, so actual music downloads may occur.
+
+See [docs/local_development.md](docs/local_development.md) for full instructions.
 
 ### So what's the roadmap?
 
