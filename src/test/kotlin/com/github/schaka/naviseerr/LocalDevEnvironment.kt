@@ -92,6 +92,7 @@ class LocalDevEnvironment {
                 entry.content.use { content ->
                     content.inputStream.use { stream ->
                         Files.copy(stream, extractTo, StandardCopyOption.REPLACE_EXISTING)
+                        extractTo.toFile().setExecutable(true)
                     }
                 }
             }
