@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-venv \
     libchromaprint-tools \
+    libasound2t64 \
     curl \
     gosu \
     ca-certificates \
