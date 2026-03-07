@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     python3-venv \
-    chromaprint-tools \
+    libchromaprint-tools \
     curl \
     gosu \
     ca-certificates \
@@ -30,8 +30,8 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages -r /tmp/requir
     && rm /tmp/requirements.txt
 
 RUN if [ "$TARGETARCH" = "amd64" ]; then \
-      curl -fsSL "https://github.com/Marekkon5/onetagger/releases/download/${ONETAGGER_VERSION}/onetagger-cli-linux" \
-        -o /usr/local/bin/onetagger-cli \
+      curl -fsSL "https://github.com/Marekkon5/onetagger/releases/download/${ONETAGGER_VERSION}/OneTagger-linux-cli.tar.gz" \
+        | tar -xz -C /usr/local/bin/ \
       && chmod +x /usr/local/bin/onetagger-cli; \
     else \
       echo "OneTagger not available for ${TARGETARCH}"; \
