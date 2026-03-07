@@ -10,7 +10,9 @@ pub fn build_command(config: &Config, path: &Path, config_path: Option<&Path>) -
     cmd.arg("--path").arg(path);
 
     let cfg = config_path.unwrap_or(&config.onetagger_default_config);
-    cmd.arg("--config").arg(cfg);
+    if cfg.exists() {
+        cmd.arg("--config").arg(cfg);
+    }
 
     cmd
 }
