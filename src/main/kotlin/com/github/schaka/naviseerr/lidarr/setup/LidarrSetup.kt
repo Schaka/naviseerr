@@ -1,10 +1,11 @@
 package com.github.schaka.naviseerr.lidarr.setup
 
-import com.fasterxml.jackson.databind.node.ArrayNode
+import tools.jackson.databind.node.ArrayNode
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
 import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.node.ObjectNode
 
 class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
 
@@ -116,23 +117,47 @@ class LidarrSetup(private val baseUrl: String, private val apiKey: String) {
     }
 
     /**
-     * Adds SoulseekDownloadProtocol to every delay profile that doesn't already have it.
+     * Enables all Primary Album Types in every metadata profile and adds SoulseekDownloadProtocol
+     * to every delay profile that doesn't already have it.
      * Lidarr's ProtocolSpecification rejects releases whose protocol isn't listed (and allowed)
      * in the delay profile matched by the artist's tags. The default profile only ships with
      * Usenet and Torrent, so Soulseek results are silently rejected without this step.
      * Must be called after installTubifarry() so the protocol is registered with Lidarr.
      */
-    fun setupSoulseekDelayProfile() {
-        val profilesRaw = client.get()
+    fun setupDefaultProfiles() {
+        val metadataProfilesRaw = client.get()
+            .uri("$baseUrl/api/v1/metadataprofile")
+            .header("X-Api-Key", apiKey)
+            .retrieve()
+            .body(String::class.java) ?: return
+
+        val metadataProfiles = mapper.readTree(metadataProfilesRaw)
+        val standardProfile = metadataProfiles.firstOrNull { it.path("name").asString() == "Standard" } ?: return
+
+        val primaryAlbumTypes = standardProfile.path("primaryAlbumTypes")
+        if (!primaryAlbumTypes.all { it.path("allowed").asBoolean() }) {
+            val profileObj = standardProfile.deepCopy()
+            profileObj.path("primaryAlbumTypes").forEach { if (it is ObjectNode) it.put("allowed", true) }
+
+            client.put()
+                .uri("$baseUrl/api/v1/metadataprofile/${standardProfile.path("id").asInt()}")
+                .header("X-Api-Key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(mapper.writeValueAsString(profileObj))
+                .retrieve()
+                .toBodilessEntity()
+        }
+
+        val delayProfilesRaw = client.get()
             .uri("$baseUrl/api/v1/delayprofile")
             .header("X-Api-Key", apiKey)
             .retrieve()
             .body(String::class.java) ?: return
 
-        val profiles = mapper.readTree(profilesRaw)
-        for (profile in profiles) {
+        val delayProfiles = mapper.readTree(delayProfilesRaw)
+        for (profile in delayProfiles) {
             val items = profile.path("items")
-            if (items.any { it.path("protocol").asString() == "SoulseekDownloadProtocol" }) continue
+            if (items.any { it.path("protocol").asString() == "SoulseekDownloadProtocol" && it.path("allowed").asBoolean() }) continue
 
             val profileObj = profile.deepCopy()
             (profileObj.path("items") as ArrayNode).addObject().apply {
