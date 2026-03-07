@@ -131,6 +131,10 @@ class RequestService(
         } else {
             // FIXME: Confirm that this case can actually happen when a new album comes out and Lidarr doesn't update metadata fast enough
             // for now it covers the case where non-allowed types are Requested and we have to force it
+
+            //FIXME: feign.FeignException$Conflict: [409 Conflict] during [POST] to [http://localhost:32783/api/v1/album] [LidarrClient#addAlbum(LidarrAddAlbumRequest)]: [{
+            //  "message": "constraint failed\nNOT NULL constraint failed: Albums.Images"
+            //}]
             val added = lidarrClient.addAlbum(
                 LidarrAddAlbumRequest(
                     foreignAlbumId = mbAlbumId,

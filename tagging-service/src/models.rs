@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OneTaggerRequest {
     pub path: PathBuf,
     pub config_path: Option<PathBuf>,
@@ -14,6 +15,7 @@ pub struct TaggerRequest {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TaggingResponse {
     pub success: bool,
     pub exit_code: i32,

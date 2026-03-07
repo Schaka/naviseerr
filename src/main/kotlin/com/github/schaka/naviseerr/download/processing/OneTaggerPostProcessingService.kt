@@ -1,17 +1,29 @@
 package com.github.schaka.naviseerr.download.processing
 
 import com.github.schaka.naviseerr.download.monitor.ProcessableDownload
+import com.github.schaka.naviseerr.tagging.TaggingClient
+import com.github.schaka.naviseerr.tagging.TaggingRequest
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.nio.file.Path
 
 @Service
-class OneTaggerPostProcessingService : PostProcessingService {
+class OneTaggerPostProcessingService(
+    private val taggingClient: TaggingClient
+) : PostProcessingService {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val binaryPath = System.getenv("ONE_TAGGER_PATH") ?: System.getProperty("ONE_TAGGER_PATH") ?: IllegalStateException("ONE_TAGGER_PATH environment variable is missing")
-
     override fun process(download: ProcessableDownload) {
-        log.info("Post-processing would run for job {} ({} files)", download.id, download.files.size)
+        val directory = download.files
+            .map { Path.of(it.filePath).parent }
+            .firstOrNull() ?: return
+
+        val response = taggingClient.oneTaggerTag(TaggingRequest(directory.toString()))
+        if (response.success) {
+            log.info("OneTagger completed for job {} in {}ms", download.id, response.durationMs)
+        } else {
+            log.warn("OneTagger failed for job {} (exit {}): {}", download.id, response.exitCode, response.stderr)
+        }
     }
 }
