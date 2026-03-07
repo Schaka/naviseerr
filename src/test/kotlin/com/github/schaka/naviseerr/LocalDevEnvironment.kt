@@ -1,16 +1,13 @@
 package com.github.schaka.naviseerr
 
-import com.github.schaka.naviseerr.containers.LidarrContainer
-import com.github.schaka.naviseerr.containers.NavidromeContainer
-import com.github.schaka.naviseerr.containers.PostgresContainer
-import com.github.schaka.naviseerr.containers.SlskdContainer
-import com.github.schaka.naviseerr.containers.createLocalDevNetwork
+import com.github.schaka.naviseerr.containers.*
 import com.github.schaka.naviseerr.lidarr.setup.LidarrSetup
 import com.github.schaka.naviseerr.navidrome.setup.NavidromeSetup
 import org.slf4j.LoggerFactory
 import org.testcontainers.lifecycle.Startables
 import java.nio.file.Files
 import java.nio.file.Path
+
 
 class LocalDevEnvironment {
 
@@ -22,7 +19,9 @@ class LocalDevEnvironment {
     private var navidromePort: Int = 0
     private var lidarrPort: Int = 0
     private var slskdPort: Int = 0
+    private var taggingPort: Int = 0
     private var lidarrApiKey: String = ""
+    private var jdbcUrl: String = ""
 
     fun start() {
         createSharedDirectories()
@@ -32,21 +31,25 @@ class LocalDevEnvironment {
         val navidrome = NavidromeContainer(musicLibrary, localRuntime, network)
         val lidarr = LidarrContainer(musicLibrary, localRuntime, network)
         val slskd = SlskdContainer(musicLibrary, localRuntime, network)
+        val tagging = TaggingContainer(musicLibrary, localRuntime, projectRoot, network)
 
-        Startables.deepStart(postgres, navidrome, lidarr, slskd).join()
+        Startables.deepStart(postgres, navidrome, lidarr, slskd, tagging).join()
 
         navidromePort = navidrome.getMappedPort(4533)
         lidarrPort = lidarr.getMappedPort(8686)
         slskdPort = slskd.getMappedPort(5030)
+        taggingPort = tagging.getMappedPort(8090)
+        jdbcUrl = postgres.jdbcUrl
 
-        NavidromeSetup("http://localhost:$navidromePort").createAdmin()
+        val navidromeSetup = NavidromeSetup("http://localhost:$navidromePort")
+        navidromeSetup.createAdmin()
 
         lidarrApiKey = lidarr.readApiKey()
         val lidarrSetup = LidarrSetup("http://localhost:$lidarrPort", lidarrApiKey)
         lidarrSetup.setupRootFolder()
         lidarrSetup.setupAuth()
         lidarrSetup.installTubifarry()
-        lidarrSetup.setupSoulseekDelayProfile()
+        lidarrSetup.setupDefaultProfiles()
         lidarrSetup.setupSlskdDownloadClient("slskd", "naviseerr-local-dev")
         lidarrSetup.setupSlskdIndexer("slskd", "naviseerr-local-dev")
 
@@ -61,12 +64,15 @@ class LocalDevEnvironment {
         System.setProperty("slskd.url", "http://localhost:$slskdPort")
         System.setProperty("slskd.api-key", "naviseerr-local-dev")
         System.setProperty("slskd.download-dir", localRuntime.resolve("downloads").toAbsolutePath().toString())
+        System.setProperty("tagging.url", "http://localhost:$taggingPort")
     }
 
     fun logStartupInfo() {
+        log.info("Started Postgres at $jdbcUrl => Login via: naviseerr/naviseerr")
         log.info("Started Navidrome at http://localhost:$navidromePort => Login via: admin/admin")
         log.info("Started Lidarr at http://localhost:$lidarrPort => Login via: admin/admin | API-Key: $lidarrApiKey")
         log.info("Started Slskd at http://localhost:$slskdPort => Login via: admin/admin | API-Key: naviseerr-local-dev")
+        log.info("Started Tagging service at http://localhost:$taggingPort")
     }
 
     private fun createSharedDirectories() {

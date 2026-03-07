@@ -1,0 +1,114 @@
+{
+  "path": null,
+  "mainTag": {
+    "id3": "AUDIO_FEATURES",
+    "vorbis": "AUDIO_FEATURES",
+    "mp4": "AUDIO_FEATURES"
+  },
+  "separators": {
+    "id3": ", ",
+    "vorbis": null,
+    "mp4": ", "
+  },
+  "properties": {
+    "acousticness": {
+      "tag": {
+        "id3": "1T_ACOUSTICNESS",
+        "vorbis": "1T_ACOUSTICNESS",
+        "mp4": "1T_ACOUSTICNESS"
+      },
+      "range": {
+        "min": 0,
+        "max": 90
+      },
+      "enabled": true
+    },
+    "danceability": {
+      "tag": {
+        "id3": "1T_DANCEABILITY",
+        "vorbis": "1T_DANCEABILITY",
+        "mp4": "1T_DANCEABILITY"
+      },
+      "range": {
+        "min": 20,
+        "max": 80
+      },
+      "enabled": true
+    },
+    "energy": {
+      "tag": {
+        "id3": "1T_ENERGY",
+        "vorbis": "1T_ENERGY",
+        "mp4": "1T_ENERGY"
+      },
+      "range": {
+        "min": 20,
+        "max": 90
+      },
+      "enabled": true
+    },
+    "instrumentalness": {
+      "tag": {
+        "id3": "1T_INSTRUMENTALNESS",
+        "vorbis": "1T_INSTRUMENTALNESS",
+        "mp4": "1T_INSTRUMENTALNESS"
+      },
+      "range": {
+        "min": 50,
+        "max": 90
+      },
+      "enabled": true
+    },
+    "liveness": {
+      "tag": {
+        "id3": "1T_LIVENESS",
+        "vorbis": "1T_LIVENESS",
+        "mp4": "1T_LIVENESS"
+      },
+      "range": {
+        "min": 0,
+        "max": 80
+      },
+      "enabled": true
+    },
+    "speechiness": {
+      "tag": {
+        "id3": "1T_SPEECHINESS",
+        "vorbis": "1T_SPEECHINESS",
+        "mp4": "1T_SPEECHINESS"
+      },
+      "range": {
+        "min": 0,
+        "max": 70
+      },
+      "enabled": true
+    },
+    "valence": {
+      "tag": {
+        "id3": "1T_VALENCE",
+        "vorbis": "1T_VALENCE",
+        "mp4": "1T_VALENCE"
+      },
+      "range": {
+        "min": 15,
+        "max": 85
+      },
+      "enabled": true
+    },
+    "popularity": {
+      "tag": {
+        "id3": "1T_POPULARITY",
+        "vorbis": "1T_POPULARITY",
+        "mp4": "1T_POPULARITY"
+      },
+      "range": {
+        "min": 0,
+        "max": 80
+      },
+      "enabled": true
+    }
+  },
+  "metaTag": true,
+  "skipTagged": false,
+  "includeSubfolders": true
+}

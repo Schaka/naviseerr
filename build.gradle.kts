@@ -59,6 +59,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     implementation("org.apache.commons:commons-text:1.15.0")
+    implementation("org.apache.commons:commons-vfs2:2.10.0")
     implementation("org.apache.lucene:lucene-core:10.3.2")
     implementation("org.apache.lucene:lucene-queryparser:10.3.2")
     implementation("org.apache.lucene:lucene-analysis-common:10.3.2")

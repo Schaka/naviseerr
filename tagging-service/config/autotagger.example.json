@@ -1,0 +1,92 @@
+{
+  "platforms": [
+    "musicbrainz",
+    "discogs",
+    "beatports"
+  ],
+  "path": null,
+  "tags": [
+    "title",
+    "artist",
+    "album",
+    "albumArtist",
+    "trackNumber",
+    "discNumber",
+    "releaseDate",
+    "genre",
+    "label",
+    "catalogNumber",
+    "isrc",
+    "url"
+  ],
+  "separators": {
+    "id3": ", ",
+    "vorbis": null,
+    "mp4": ", "
+  },
+  "id3v24": true,
+  "overwrite": true,
+  "overwriteTags": [],
+  "threads": 16,
+  "strictness": 0.7,
+  "mergeGenres": false,
+  "albumArtFile": false,
+  "camelot": false,
+  "parseFilename": true,
+  "filenameTemplate": "%artists% - %title%",
+  "shortTitle": false,
+  "matchDuration": false,
+  "maxDurationDifference": 30,
+  "matchById": false,
+  "multipleMatches": "Default",
+  "postCommand": null,
+  "stylesOptions": "default",
+  "stylesCustomTag": {
+    "id3": "STYLE",
+    "vorbis": "STYLE",
+    "mp4": "STYLE"
+  },
+  "trackNumberLeadingZeroes": 0,
+  "enableShazam": false,
+  "forceShazam": false,
+  "skipTagged": false,
+  "includeSubfolders": true,
+  "onlyYear": false,
+  "titleRegex": null,
+  "moveSuccess": false,
+  "moveSuccessPath": null,
+  "moveFailed": false,
+  "moveFailedPath": null,
+  "writeLrc": false,
+  "enhancedLrc": false,
+  "capitalizeGenres": false,
+  "id3CommLang": null,
+  "multiplatform": false,
+  "custom": {
+    "beatport": {
+      "art_resolution": 500,
+      "ignore_version": false,
+      "max_pages": 1
+    },
+    "discogs": {
+      "max_albums": 4,
+      "token": "",
+      "track_number_int": false
+    },
+    "beatsource": {
+      "art_resolution": 500
+    },
+    "itunes": {
+      "art_resolution": 1000
+    },
+    "bpmsupreme": {
+      "email": "",
+      "library": "Supreme",
+      "password": ""
+    },
+    "deezer": {
+      "art_resolution": 1200
+    }
+  },
+  "spotify": null
+}

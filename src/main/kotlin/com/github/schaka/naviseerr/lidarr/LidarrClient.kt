@@ -64,4 +64,19 @@ interface LidarrClient {
 
     @RequestLine("GET /metadataprofile")
     fun getMetadataProfiles(): List<LidarrMetadataProfile>
+
+    @RequestLine("GET /downloadclient")
+    fun getDownloadClients(): List<LidarrDownloadClient>
+
+    @RequestLine("GET /history/artist?artistId={artistId}")
+    fun getArtistHistory(@Param("artistId") artistId: Long): List<LidarrHistoryRecord>
+
+    @RequestLine("GET /history/album?albumId={albumId}")
+    fun getAlbumHistory(@Param("albumId") albumId: Long): List<LidarrHistoryRecord>
+
+    @RequestLine("POST /blacklist")
+    fun addToBlacklist(request: LidarrBlacklistRequest)
+
+    @RequestLine("DELETE /trackfile/bulk")
+    fun deleteTrackFiles(request: LidarrDeleteTrackFilesRequest)
 }
