@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 
-class TaggingContainer(musicLibrary: Path, localRuntime: Path, projectRoot: Path, network: Network? = null) : GenericContainer<TaggingContainer>("ghcr.io/schaka/naviseerr-tagging:8-merge") {
+class TaggingContainer(musicLibrary: Path, localRuntime: Path, projectRoot: Path, network: Network? = null) : GenericContainer<TaggingContainer>("ghcr.io/schaka/naviseerr-tagging:stable") {
 
     init {
         withExposedPorts(8090)
