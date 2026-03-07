@@ -31,7 +31,7 @@ class LocalDevEnvironment {
         val navidrome = NavidromeContainer(musicLibrary, localRuntime, network)
         val lidarr = LidarrContainer(musicLibrary, localRuntime, network)
         val slskd = SlskdContainer(musicLibrary, localRuntime, network)
-        val tagging = TaggingContainer(musicLibrary, localRuntime, network)
+        val tagging = TaggingContainer(musicLibrary, localRuntime, projectRoot, network)
 
         Startables.deepStart(postgres, navidrome, lidarr, slskd, tagging).join()
 
