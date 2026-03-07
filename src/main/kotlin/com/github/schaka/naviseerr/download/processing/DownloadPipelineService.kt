@@ -48,7 +48,7 @@ class DownloadPipelineService(
         for (file in download.files) {
             val result = acoustIdService.recognize(file.filePath)
             val status = if (result == AcoustIdResult.RECOGNIZED) FileProcessingStatus.RECOGNIZED else FileProcessingStatus.UNRECOGNIZED
-            service.updateFileAcoustId(file.id, status)
+            service.updateFileAcoustId(file.id, status) //FIXME: bulk update
         }
         log.info("AcoustID done for job {}, advancing to POST_PROCESSING", download.id)
         service.updateJobStatus(download.id, DownloadJobStatus.POST_PROCESSING)
@@ -56,7 +56,7 @@ class DownloadPipelineService(
 
     private fun processPostProcessing(service: DownloadMonitorService, download: ProcessableDownload): Boolean {
         postProcessingService.process(download)
-        download.files.forEach { service.updateFilePostProcessing(it.id, FileProcessingStatus.COMPLETED) }
+        download.files.forEach { service.updateFilePostProcessing(it.id, FileProcessingStatus.COMPLETED) } //FIXME: bulk update
 
         return if (service.needsImport()) {
             log.info("Post-processing done for job {}, advancing to IMPORT_PENDING", download.id)
@@ -72,7 +72,7 @@ class DownloadPipelineService(
 
     private fun processImport(service: DownloadMonitorService, download: ProcessableDownload) {
         libraryImportService.importToLibrary(download)
-        download.files.forEach { service.updateFileImportStatus(it.id, FileProcessingStatus.COMPLETED) }
+        download.files.forEach { service.updateFileImportStatus(it.id, FileProcessingStatus.COMPLETED) } //FIXME: bulk update
         log.info("Import done for job {}, marking COMPLETED", download.id)
         service.markCompleted(download)
         service.cleanup(download)

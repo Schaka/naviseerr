@@ -1,16 +1,19 @@
 package com.github.schaka.naviseerr
 
-import com.github.schaka.naviseerr.containers.LidarrContainer
-import com.github.schaka.naviseerr.containers.NavidromeContainer
-import com.github.schaka.naviseerr.containers.PostgresContainer
-import com.github.schaka.naviseerr.containers.SlskdContainer
-import com.github.schaka.naviseerr.containers.createLocalDevNetwork
+import com.github.schaka.naviseerr.containers.*
 import com.github.schaka.naviseerr.lidarr.setup.LidarrSetup
 import com.github.schaka.naviseerr.navidrome.setup.NavidromeSetup
+import org.apache.commons.vfs2.FileType
+import org.apache.commons.vfs2.VFS
 import org.slf4j.LoggerFactory
 import org.testcontainers.lifecycle.Startables
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.util.zip.GZIPInputStream
+
 
 class LocalDevEnvironment {
 
@@ -27,6 +30,7 @@ class LocalDevEnvironment {
 
     fun start() {
         createSharedDirectories()
+        setupOneTagger()
 
         val network = createLocalDevNetwork()
         val postgres = PostgresContainer(localRuntime, network)
@@ -63,6 +67,35 @@ class LocalDevEnvironment {
         System.setProperty("slskd.url", "http://localhost:$slskdPort")
         System.setProperty("slskd.api-key", "naviseerr-local-dev")
         System.setProperty("slskd.download-dir", localRuntime.resolve("downloads").toAbsolutePath().toString())
+    }
+
+    private fun setupOneTagger() {
+        val oneTaggerPath = localRuntime.resolve("one-tagger")
+        Files.createDirectories(oneTaggerPath)
+        System.setProperty("ONE_TAGGER_PATH", oneTaggerPath.resolve("onetagger-cli").toAbsolutePath().toString())
+        val fileUrl = URI("https://github.com/Marekkon5/onetagger/releases/download/1.7.0/OneTagger-linux-cli.tar.gz").toURL()
+        val tarPath = oneTaggerPath.resolve("one-tagger.tar")
+
+
+        Files.copy(GZIPInputStream(fileUrl.openStream()),
+            tarPath,
+                StandardCopyOption.REPLACE_EXISTING
+            )
+
+        val fsManager = VFS.getManager()
+        val tar = fsManager.resolveFile("tar:${tarPath.toAbsolutePath().toUri()}")
+        for (entry in tar) {
+            // entries have a leading slash, need to construct path like this to avoid absolute path
+            val extractTo = Paths.get(oneTaggerPath.toAbsolutePath().toString(), entry.name.path )
+            if (entry.isReadable && entry.type === FileType.FILE) {
+                Files.createDirectories(extractTo.parent)
+                entry.content.use { content ->
+                    content.inputStream.use { stream ->
+                        Files.copy(stream, extractTo, StandardCopyOption.REPLACE_EXISTING)
+                    }
+                }
+            }
+        }
     }
 
     fun logStartupInfo() {
